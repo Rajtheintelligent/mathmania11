@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Cheese Chase - EXTREME</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons for control buttons -->
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937; /* Dark gray background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        #game-container {
+            background-color: #374151; /* Medium gray for the container */
+            border: 8px solid #4b5563; /* Border for wood/wall effect */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        #mazeCanvas {
+            background-color: #0f172a; /* Dark background for the maze path (like a wall interior) */
+            touch-action: none; /* Prevent scrolling on touch */
+            border-radius: 6px;
+        }
+
+        /* --- Custom Button Styling for Gamepad --- */
+        .dir-button {
+            width: 60px;
+            height: 60px;
+            background-color: #10b981; /* Emerald green */
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px #059669;
+            transition: all 0.1s ease-out;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dir-button:active {
+            box-shadow: 0 0 #059669;
+            transform: translateY(4px);
+        }
+
+        /* Hide the d-pad on desktop */
+        @media (min-width: 768px) {
+            #mobile-controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container" class="max-w-xl w-full">
+        <header class="text-center mb-4">
+            <h1 class="text-3xl font-extrabold text-white">The Great Cheese Chase</h1>
+            <p id="message-box" class="text-lg text-gray-300 font-medium h-6">Welcome to the FINAL LEVEL: EXTREME JUMBLED MAZE! (🐭 to 🧀)</p>
+        </header>
+
+        <!-- Canvas for the Maze -->
+        <canvas id="mazeCanvas" class="w-full h-auto"></canvas>
+
+        <!-- Mobile/Touch Controls (D-Pad) -->
+        <div id="mobile-controls" class="mt-8 flex justify-center items-center md:hidden">
+            <div class="grid grid-cols-3 gap-2">
+                <div></div>
+                <button class="dir-button" data-dir="Up" aria-label="Move Up"><i class="lucide lucide-chevron-up"></i></button>
+                <div></div>
+                <button class="dir-button" data-dir="Left" aria-label="Move Left"><i class="lucide lucide-chevron-left"></i></button>
+                <button class="dir-button bg-gray-600 hover:bg-gray-700 active:shadow-none" id="restart-btn-mobile" aria-label="Restart Puzzle">
+                    <i class="lucide lucide-rotate-ccw"></i>
+                </button>
+                <button class="dir-button" data-dir="Right" aria-label="Move Right"><i class="lucide lucide-chevron-right"></i></button>
+                <div></div>
+                <button class="dir-button" data-dir="Down" aria-label="Move Down"><i class="lucide lucide-chevron-down"></i></button>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- Desktop/General Controls -->
+        <div class="mt-4 flex justify-center space-x-4">
+            <button id="restart-btn" class="hidden md:flex py-2 px-6 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition shadow-md">
+                <i class="lucide lucide-rotate-ccw w-5 h-5 mr-2"></i> Restart
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Setup ---
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageBox = document.getElementById('message-box');
+
+        // Maze Grid (41x41) - EXTREME MAXIMUM DIFFICULTY: JUMBLED
+        // 1=Wall, 0=Path, 2=Mouse Start, 3=Cheese End
+        const MAZE = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 2, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        const MAZE_ROWS = MAZE.length;
+        const MAZE_COLS = MAZE[0].length;
+        let CELL_SIZE = 30; // Will be calculated on resize
+
+        let player = {
+            row: 0,
+            col: 0
+        };
+        let cheese = {
+            row: 0,
+            col: 0
+        };
+
+        let isGameOver = false;
+
+        // --- Initialization ---
+
+        function findStartAndEnd() {
+            for (let r = 0; r < MAZE_ROWS; r++) {
+                for (let c = 0; c < MAZE_COLS; c++) {
+                    if (MAZE[r][c] === 2) {
+                        player.row = r;
+                        player.col = c;
+                    } else if (MAZE[r][c] === 3) {
+                        cheese.row = r;
+                        cheese.col = c;
+                    }
+                }
+            }
+        }
+
+        function resizeCanvas() {
+            const containerWidth = document.getElementById('game-container').offsetWidth - 32; // Container padding adjustment
+            // Set canvas size to fit container width, maintaining aspect ratio
+            const size = Math.min(containerWidth, 900); // Increased cap for 41x41
+            canvas.width = size;
+            canvas.height = size;
+            
+            CELL_SIZE = canvas.width / MAZE_COLS;
+            drawMaze();
+        }
+
+        // --- Drawing Functions ---
+
+        function drawMaze() {
+            if (isGameOver) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < MAZE_ROWS; r++) {
+                for (let c = 0; c < MAZE_COLS; c++) {
+                    const x = c * CELL_SIZE;
+                    const y = r * CELL_SIZE;
+
+                    // 1. Draw Cell Background (Path)
+                    if (MAZE[r][c] !== 1) {
+                        ctx.fillStyle = '#2d3748'; // Path color
+                        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                    }
+
+                    // 2. Draw Walls
+                    if (MAZE[r][c] === 1) {
+                        ctx.fillStyle = '#4b5563'; // Wall color
+                        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                    }
+                    
+                    // 3. Draw Cheese (End)
+                    if (MAZE[r][c] === 3) {
+                        drawEmoji('🧀', x, y);
+                    }
+                }
+            }
+            
+            // 4. Draw Mouse (Player) - Always draw last to be on top
+            drawEmoji('🐭', player.col * CELL_SIZE, player.row * CELL_SIZE);
+        }
+
+        function drawEmoji(emoji, x, y) {
+            ctx.font = `${CELL_SIZE * 0.7}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Center the emoji within the cell
+            const centerX = x + CELL_SIZE / 2;
+            const centerY = y + CELL_SIZE / 2;
+            
+            ctx.fillText(emoji, centerX, centerY);
+        }
+
+        // --- Game Logic ---
+
+        function movePlayer(dRow, dCol) {
+            if (isGameOver) return;
+
+            const newRow = player.row + dRow;
+            const newCol = player.col + dCol;
+
+            // Check boundaries
+            if (newRow >= 0 && newRow < MAZE_ROWS && newCol >= 0 && newCol < MAZE_COLS) {
+                // Check for wall (MAZE[r][c] === 1)
+                if (MAZE[newRow][newCol] !== 1) {
+                    player.row = newRow;
+                    player.col = newCol;
+
+                    drawMaze();
+                    
+                    // Check for win condition
+                    if (player.row === cheese.row && player.col === cheese.col) {
+                        handleWin();
+                    }
+                }
+            }
+        }
+        
+        function handleWin() {
+            isGameOver = true;
+            messageBox.textContent = "🏆 Congratulations! You conquered the impossible maze! 🧀";
+            messageBox.classList.add('text-yellow-400');
+            
+            // Draw one final time with a celebratory style
+            drawMaze();
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.7)'; // Green overlay
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            // Increased font size for victory message
+            ctx.font = `${canvas.width / 8}px sans-serif`; 
+            ctx.fillText("YOU WIN!", canvas.width / 2, canvas.height / 2);
+        }
+        
+        function resetGame() {
+            isGameOver = false;
+            findStartAndEnd(); // Reset player position
+            messageBox.textContent = "Welcome to the FINAL LEVEL: EXTREME JUMBLED MAZE! (🐭 to 🧀)";
+            messageBox.classList.remove('text-yellow-400');
+            drawMaze();
+        }
+
+        // --- Input Handling ---
+
+        function handleKeyDown(event) {
+            let dRow = 0;
+            let dCol = 0;
+
+            switch (event.key) {
+                case 'ArrowUp':
+                case 'w':
+                    dRow = -1;
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    dRow = 1;
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    dCol = -1;
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    dCol = 1;
+                    break;
+                default:
+                    return; // Ignore other keys
+            }
+
+            event.preventDefault(); // Stop window scrolling
+            movePlayer(dRow, dCol);
+        }
+        
+        function setupEventListeners() {
+            // Keyboard control
+            window.addEventListener('keydown', handleKeyDown);
+            
+            // Resize handler
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Restart buttons
+            document.getElementById('restart-btn').addEventListener('click', resetGame);
+            document.getElementById('restart-btn-mobile').addEventListener('click', resetGame);
+
+            // Mobile D-Pad control
+            const dirButtons = document.querySelectorAll('.dir-button');
+            dirButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const dir = e.currentTarget.dataset.dir;
+                    let dRow = 0;
+                    let dCol = 0;
+
+                    if (dir === 'Up') dRow = -1;
+                    else if (dir === 'Down') dRow = 1;
+                    else if (dir === 'Left') dCol = -1;
+                    else if (dir === 'Right') dCol = 1;
+
+                    movePlayer(dRow, dCol);
+                });
+            });
+            
+            // Initial setup
+            findStartAndEnd();
+            resizeCanvas(); 
+        }
+
+        window.onload = setupEventListeners;
+
+    </script>
+</body>
+</html>
