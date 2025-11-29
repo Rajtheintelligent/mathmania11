@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Grid Puzzle</title>
+    <!-- Load Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" rel="stylesheet">
+    
+    <style>
+        /* Custom font and layout setup */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1e293b; /* Slate-800 background */
+        }
+        .lucide {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Grid specific styles */
+        #puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1 / 1; /* Keep cells square */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .solved {
+            background-color: #10b981; /* Emerald-500 */
+            color: white;
+            animation: pulse-solve 1s infinite alternate;
+        }
+
+        @keyframes pulse-solve {
+            from {
+                transform: scale(1.0);
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+            }
+            to {
+                transform: scale(1.03);
+                box-shadow: 0 0 20px rgba(16, 185, 129, 1);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="w-full max-w-xl bg-white p-6 md:p-8 rounded-2xl shadow-2xl border-t-8 border-indigo-500">
+        
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-indigo-700">The Number Grid Challenge</h1>
+            <p class="text-lg text-gray-500 font-medium">Arrange the tiles in numerical order (1 to 8, with 9 as the blank space).</p>
+        </header>
+
+        <div id="puzzle-area" class="mb-6">
+            <!-- Puzzle Grid will be inserted here -->
+        </div>
+
+        <div id="game-controls" class="flex flex-col space-y-4">
+            <div id="status-bar" class="flex justify-between items-center p-3 bg-gray-100 rounded-xl shadow-inner text-gray-700 font-semibold">
+                <div class="flex items-center">
+                    <i class="lucide lucide-shuffle w-5 h-5 mr-2"></i>
+                    <span id="moves-counter">Moves: 0</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="lucide lucide-timer w-5 h-5 mr-2"></i>
+                    <span id="time-display">Time: 0s</span>
+                </div>
+            </div>
+
+            <button
+                id="reset-btn"
+                class="w-full py-3 bg-lime-500 text-indigo-900 rounded-xl text-xl font-extrabold hover:bg-lime-600 shadow-md transition duration-150 flex items-center justify-center"
+            >
+                <i class="lucide lucide-rotate-ccw w-6 h-6 mr-2"></i> New Puzzle (Shuffle)
+            </button>
+            
+            <div id="message-box" class="min-h-10 text-center text-lg font-bold">
+                <!-- Game messages appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Logic ---
+        const GRID_SIZE = 3;
+        const FINAL_STATE = [1, 2, 3, 4, 5, 6, 7, 8, 0]; // 0 represents the blank space (9th cell)
+        
+        let board = [];
+        let moves = 0;
+        let timer = null;
+        let seconds = 0;
+        let isSolved = false;
+
+        const puzzleArea = document.getElementById('puzzle-area');
+        const movesCounter = document.getElementById('moves-counter');
+        const timeDisplay = document.getElementById('time-display');
+        const messageBox = document.getElementById('message-box');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Helper function to create the initial solvable shuffled board
+        function createInitialBoard() {
+            let initial = [...FINAL_STATE].slice(0, 8); // 1 to 8
+            
+            // Fisher-Yates shuffle
+            for (let i = initial.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [initial[i], initial[j]] = [initial[j], initial[i]];
+            }
+            
+            // Add the blank space (0)
+            initial.push(0); 
+
+            // Check for solvability (Inversion Count Logic for 3x3 grid)
+            // A 3x3 puzzle is solvable if the number of inversions is even.
+            let inversions = 0;
+            for (let i = 0; i < initial.length - 1; i++) {
+                for (let j = i + 1; j < initial.length; j++) {
+                    if (initial[i] !== 0 && initial[j] !== 0 && initial[i] > initial[j]) {
+                        inversions++;
+                    }
+                }
+            }
+            
+            // If the inversion count is odd, swap two tiles to make it solvable
+            if (inversions % 2 !== 0) {
+                // Find two non-zero tiles and swap them (e.g., first two)
+                let idx1 = initial.findIndex(val => val !== 0);
+                let idx2 = initial.findIndex((val, index) => val !== 0 && index !== idx1);
+                
+                if (idx1 !== -1 && idx2 !== -1) {
+                    [initial[idx1], initial[idx2]] = [initial[idx2], initial[idx1]];
+                }
+            }
+
+            return initial;
+        }
+
+        // Convert 1D index to 2D coordinates
+        const toCoords = (index) => ({
+            row: Math.floor(index / GRID_SIZE),
+            col: index % GRID_SIZE
+        });
+
+        // Convert 2D coordinates to 1D index
+        const toIndex = (row, col) => row * GRID_SIZE + col;
+        
+        // --- Core Game Functions ---
+
+        function startGame() {
+            isSolved = false;
+            moves = 0;
+            seconds = 0;
+            board = createInitialBoard();
+            
+            // Stop and reset timer
+            if (timer) clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+            
+            updateDisplay();
+            messageBox.innerHTML = '<span class="text-indigo-600">Click a tile next to the blank space to move it.</span>';
+        }
+
+        function updateTimer() {
+            seconds++;
+            timeDisplay.textContent = `Time: ${seconds}s`;
+        }
+
+        function renderGrid() {
+            let gridHtml = '<div id="puzzle-grid">';
+            
+            board.forEach((value, index) => {
+                const isBlank = value === 0;
+                const cellClasses = isBlank 
+                    ? 'bg-gray-700 cursor-default opacity-0' // Hidden blank space
+                    : 'bg-indigo-400 text-white hover:bg-indigo-500 shadow-xl';
+                
+                gridHtml += `
+                    <div 
+                        class="grid-cell ${cellClasses}" 
+                        data-index="${index}"
+                        data-value="${value}"
+                        onclick="handleTileClick(${index})"
+                    >
+                        ${isBlank ? '' : value}
+                    </div>
+                `;
+            });
+            
+            gridHtml += '</div>';
+            puzzleArea.innerHTML = gridHtml;
+
+            // Apply solved class if game is won
+            if (isSolved) {
+                 document.querySelectorAll('.grid-cell').forEach(cell => {
+                    cell.classList.add('solved');
+                    cell.onclick = null; // Disable clicking
+                });
+            }
+        }
+
+        function updateDisplay() {
+            movesCounter.textContent = `Moves: ${moves}`;
+            renderGrid();
+        }
+
+        window.handleTileClick = (index) => {
+            if (isSolved) return;
+
+            const clickedValue = board[index];
+            const blankIndex = board.indexOf(0);
+
+            const { row: clickR, col: clickC } = toCoords(index);
+            const { row: blankR, col: blankC } = toCoords(blankIndex);
+
+            // Check if the clicked tile is adjacent to the blank space
+            const isAdjacent = (Math.abs(clickR - blankR) + Math.abs(clickC - blankC) === 1);
+
+            if (isAdjacent) {
+                // Swap the tiles
+                board[blankIndex] = clickedValue;
+                board[index] = 0;
+                moves++;
+                
+                // Check win condition
+                if (checkWin()) {
+                    isSolved = true;
+                    clearInterval(timer);
+                    messageBox.innerHTML = `<div class="text-lime-500 text-2xl animate-bounce flex items-center justify-center">
+                        <i class="lucide lucide-award w-6 h-6 mr-2"></i> Puzzle Solved in ${moves} moves and ${seconds} seconds!
+                    </div>`;
+                    // Full re-render to apply 'solved' class and disable clicks
+                    renderGrid(); 
+                } else {
+                    updateDisplay();
+                }
+            } else {
+                messageBox.innerHTML = '<span class="text-red-500">You can only move tiles adjacent to the blank space!</span>';
+                // Clear error message after a short delay
+                setTimeout(() => {
+                    if (!isSolved) {
+                        messageBox.innerHTML = '<span class="text-indigo-600">Click a tile next to the blank space to move it.</span>';
+                    }
+                }, 1000);
+            }
+        };
+
+        function checkWin() {
+            // Compare the current board array with the FINAL_STATE
+            return board.every((value, index) => value === FINAL_STATE[index]);
+        }
+        
+        // --- Event Listeners and Initialization ---
+
+        resetBtn.addEventListener('click', startGame);
+
+        window.onload = startGame;
+
+    </script>
+</body>
+</html>
