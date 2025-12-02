@@ -1,251 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math-Mania Rapid Round Quiz - Progressive</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Math-Mania Rapid Round Quiz - Progressive</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- MathJax configuration (must be BEFORE the MathJax script) -->
+  <script>
     window.MathJax = {
       tex: {
-        inlineMath: [["$", "$"], ["\\(", "\\)"]]
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        packages: ['base']
       },
-      svg: { fontCache: "global" }
+      svg: { fontCache: 'global' }
     };
-    </script>
+  </script>
 
-        <script id="MathJax-script" async 
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
-          
-    <!-- MathJax -->
-    <script id="MathJax-script" async 
-        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-    </script>
+  <!-- Load MathJax (single bundle for TeX -> SVG) -->
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
-        }
-        .card {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-            max-width: 700px;
-        }
-        .btn-primary {
-            background-color: #3b82f6;
-            color: white;
-            transition: 0.1s;
-        }
-        .btn-primary:hover { background-color: #2563eb; }
-        .btn-primary:active { transform: translateY(1px); }
-
-        .text-dark { color: #1a202c; }
-        .text-accent { color: #d97706; }
-
-        #question-card { background-color: #edf2f7; }
-
-        #answer-input {
-            background-color: #fff;
-            border: 1px solid #cbd5e0;
-            color: #1a202c;
-        }
-
-        /* Allow LaTeX inline rendering */
-        #question-text .MathJax { display: inline; }
-
-        /* Optional: Prevent selecting question text */
-        #question-text {
-            user-select: none;
-            -webkit-user-select: none;
-        }
-    </style>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f7f7f7; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 5px 10px rgba(0,0,0,0.08); max-width:700px; }
+    .btn-primary { background:#3b82f6; color:#fff; transition:0.1s; }
+    .btn-primary:hover{ background:#2563eb; }
+    #question-text .MathJax { display:inline; }
+    #question-text { user-select:none; -webkit-user-select:none; }
+  </style>
 </head>
+<body class="flex items-center justify-center min-h-screen p-6">
 
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+  <div class="w-full max-w-3xl space-y-6">
 
-    <!-- Header -->
-    <header class="w-full max-w-3xl mx-auto flex justify-between items-center py-4 px-2 mb-6">
-        <div class="flex items-center space-x-3">
-            <img src="https://placehold.co/60x60/e0e7ff/3b82f6?text=LOGO" class="h-14 w-14 rounded-full border-2 border-blue-300">
-            <h2 class="text-xl font-semibold text-gray-800 hidden sm:block">Math-Mania Rapid Quiz</h2>
+    <header class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="https://placehold.co/64x64/e0e7ff/3b82f6?text=LOGO" alt="logo" class="h-16 w-16 rounded-full border" />
+        <div>
+          <h1 class="text-2xl font-extrabold">Math-Mania Rapid Round</h1>
+          <p class="text-sm text-gray-600">Progressive difficulty</p>
         </div>
-
-        <div class="text-center">
-            <img src="https://placehold.co/60x60/e0e7ff/3b82f6?text=SR" class="h-14 w-14 rounded-full border-2 border-blue-300">
-            <p class="text-xs text-gray-600">S. Ramanujan</p>
-        </div>
+      </div>
+      <div class="text-right text-sm text-gray-600">S. Ramanujan</div>
     </header>
 
-    <!-- Instructions Page -->
-    <div id="instructions-page" class="card w-full p-8 text-gray-800">
-        <h1 class="text-3xl font-bold mb-4 text-center text-accent">Welcome to Math-Mania!</h1>
-        <p class="text-center text-gray-600 mb-6">Rapid Round - Progressive Difficulty</p>
+    <main id="instructions-page" class="card p-6">
+      <h2 class="text-xl font-bold text-amber-600 mb-3">Welcome</h2>
+      <p class="text-sm text-gray-700">10 questions — answer correctly to move on.</p>
+      <button id="start-quiz-btn" class="btn-primary mt-4 px-4 py-2 rounded-md font-bold w-full">Start Quiz Now</button>
+    </main>
 
-        <p class="font-semibold text-lg border-b pb-2">Instructions:</p>
-        <ul class="list-disc list-inside space-y-2 ml-4 mt-3">
-            <li>10 questions from easy to extreme.</li>
-            <li>You must answer correctly to unlock the next question.</li>
-            <li>Units are optional.</li>
-            <li>Your score out of 10 will be shown at the end.</li>
-            <li>Unique submission code will be generated.</li>
-        </ul>
+    <section id="main-quiz-container" class="card p-6 hidden">
+      <div class="mb-4 text-center">
+        Question <span id="current-q-number">1</span> of <span id="total-q-count">10</span>
+      </div>
 
-        <button id="start-quiz-btn" class="btn-primary w-full py-3 mt-8 rounded-lg font-bold">
-            Start Quiz Now
-        </button>
-    </div>
-
-    <!-- Main Quiz Container -->
-    <div id="main-quiz-container" class="card w-full p-8 text-gray-800 hidden">
-
-        <div id="question-area">
-
-            <div id="quiz-status" class="mb-4 text-center text-lg font-semibold">
-                Question <span id="current-q-number">1</span> of <span id="total-q-count"></span>
-            </div>
-
-            <div id="question-card" class="p-6 rounded-lg mb-6 border border-blue-200">
-                <p id="question-text" class="text-xl font-medium mb-4 text-center"></p>
-                <div class="flex items-center space-x-2">
-                    <label>Your Answer:</label>
-                    <input type="text" id="answer-input" class="flex-grow p-2 rounded-md border focus:ring-2 focus:ring-blue-400" placeholder="Enter answer...">
-                </div>
-            </div>
-
-            <button id="submit-btn" class="btn-primary w-full py-3 rounded-lg font-bold">
-                Submit Answer
-            </button>
-
-            <div id="feedback" class="mt-4 p-3 text-center hidden font-medium rounded-md"></div>
+      <div id="question-card" class="p-4 rounded border bg-blue-50 mb-4">
+        <div id="question-text" class="text-lg font-medium text-center min-h-[3rem]"></div>
+        <div class="mt-4 flex items-center gap-3">
+          <label class="text-sm">Your Answer</label>
+          <input id="answer-input" type="text" class="flex-1 p-2 rounded border" placeholder="Type answer..." />
         </div>
+      </div>
 
-        <!-- Results Area -->
-        <div id="results-area" class="hidden text-center">
-            <h2 class="text-2xl font-bold mb-4 text-green-600">Quiz Complete!</h2>
-            <p id="final-score" class="text-xl mb-6"></p>
+      <button id="submit-btn" class="btn-primary w-full py-2 rounded-md font-semibold">Submit Answer</button>
+      <div id="feedback" class="mt-4 hidden p-3 rounded-md text-center"></div>
+    </section>
 
-            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6 rounded-lg">
-                <p class="font-bold">Your Unique Completion Code:</p>
-                <code id="unique-code" class="text-2xl font-mono block mt-2 p-2 bg-white rounded border select-all"></code>
-            </div>
+    <section id="results-area" class="card p-6 hidden text-center">
+      <h3 class="text-2xl font-bold text-green-600">Quiz Complete!</h3>
+      <p id="final-score" class="mt-2"></p>
+      <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+        <p class="font-semibold">Your Completion Code</p>
+        <code id="unique-code" class="block mt-2 font-mono text-lg bg-white p-2 rounded"></code>
+      </div>
+      <div class="mt-4 flex justify-center gap-3">
+        <a id="form-link" class="btn-primary px-4 py-2 rounded-md text-white" href="#" target="_blank">Submit</a>
+        <button id="restart-btn" class="px-4 py-2 rounded-md border">Restart</button>
+      </div>
+    </section>
 
-            <a href="#" target="_blank" class="btn-primary py-2 px-6 rounded-lg font-bold">
-                Go to Google Submission Form
-            </a>
+  </div>
 
-            <button id="restart-btn" class="py-2 px-6 bg-gray-500 text-white rounded-lg font-bold ml-4">
-                Restart Quiz
-            </button>
-        </div>
+  <script>
+    // QUESTIONS (you can keep LaTeX here)
+    const PROGRESSIVE_QUIZ_SET = [
+      { question: "Find the value of $\\sqrt{169} + \\sqrt{25}$.", answer: "18" },
+      { question: "A shirt costs ₹500. If a discount of 20% is offered, what is the final price?", answer: "400" },
+      { question: "If $y=3$, find the value of $5y^{2}-10$.", answer: "35" },
+      { question: "Solve for $x$: $4x-5=x+7$.", answer: "4" },
+      { question: "A rectangle is 3 times as long as its width. Width = 4 cm. Find area (cm²).", answer: "48" },
+      { question: "A car travels at 60 km/hr for 15 min. Distance in km?", answer: "15" },
+      { question: "A and B share ₹240 in ratio 5:3. How much more does A get?", answer: "60" },
+      { question: "Side of a square = 10 cm. Increased by 2 cm. % increase in perimeter?", answer: "20%" },
+      { question: "Walk 9 km North and 12 km East. Distance from start?", answer: "15" },
+      { question: "A park is 20×10 m. A path 1 m wide runs outside. Area of path?", answer: "64" }
+    ];
 
-    </div>
+    // DOM refs
+    const startBtn = document.getElementById('start-quiz-btn');
+    const mainQuiz = document.getElementById('main-quiz-container');
+    const instr = document.getElementById('instructions-page');
+    const qText = document.getElementById('question-text');
+    const ansInput = document.getElementById('answer-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const feedback = document.getElementById('feedback');
+    const currentQNumber = document.getElementById('current-q-number');
+    const totalQCount = document.getElementById('total-q-count');
+    const resultsArea = document.getElementById('results-area');
+    const finalScoreEl = document.getElementById('final-score');
+    const uniqueCodeEl = document.getElementById('unique-code');
+    const formLink = document.getElementById('form-link');
+    const restartBtn = document.getElementById('restart-btn');
 
-    <script>
-        const PROGRESSIVE_QUIZ_SET = [
-            { question: "Find the value of $\\sqrt{169} + \\sqrt{25}$.", answer: "18" },
-            { question: "A shirt costs ₹500. If a discount of 20% is offered, what is the final price?", answer: "400" },
-            { question: "If $y=3$, find the value of $5y^{2}-10$.", answer: "35" },
-            { question: "Solve for $x$: $4x-5=x+7$.", answer: "4" },
-            { question: "A rectangle is 3 times as long as its width. Width = 4 cm. Find area (cm²).", answer: "48" },
-            { question: "A car travels at 60 km/hr for 15 min. Distance in km?", answer: "15" },
-            { question: "A and B share ₹240 in ratio 5:3. How much more does A get?", answer: "60" },
-            { question: "Side of a square = 10 cm. Increased by 2 cm. % increase in perimeter?", answer: "20%" },
-            { question: "Walk 9 km North and 12 km East. Distance from start?", answer: "15" },
-            { question: "A park is 20×10 m. A path 1 m wide runs outside. Area of path?", answer: "64" }
-        ];
+    let currentIndex = 0;
+    let score = 0;
+    let startTime = 0;
 
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let startTime = null;
+    totalQCount.textContent = PROGRESSIVE_QUIZ_SET.length;
+    formLink.href = "https://docs.google.com/forms/d/e/1FAIpQLSfN8L4X9J-D0vQ6Z7Gk0t_R4yI3oV8hJ9A2T5ePzO0Y2f9c/viewform?usp=sf_link";
 
-        const instructionsPage = document.getElementById("instructions-page");
-        const mainQuizContainer = document.getElementById("main-quiz-container");
-        const totalQCountEl = document.getElementById("total-q-count");
-        const currentQNumberEl = document.getElementById("current-q-number");
-        const questionTextEl = document.getElementById("question-text");
-        const answerInputEl = document.getElementById("answer-input");
-        const submitBtn = document.getElementById("submit-btn");
-        const feedbackEl = document.getElementById("feedback");
-        const quizArea = document.getElementById("question-area");
-        const resultsArea = document.getElementById("results-area");
-        const finalScoreEl = document.getElementById("final-score");
-        const uniqueCodeEl = document.getElementById("unique-code");
+    function normalize(a){
+      return String(a||'').toLowerCase().replace(/[^0-9.%\-]/g,'').trim();
+    }
 
-        function normalize(a) {
-            return a.toString().toLowerCase().replace(/[^0-9.%]/g, "").trim();
-        }
+    // Safe typeset helper — only call if MathJax is ready
+    function safeTypeset(element){
+      if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+        return MathJax.typesetPromise([element]).catch(()=>{ /* ignore typeset errors */ });
+      } else {
+        // MathJax not ready — do nothing (content will be plain text)
+        return Promise.resolve();
+      }
+    }
 
-        function loadQuestion() {
-            const q = PROGRESSIVE_QUIZ_SET[currentQuestionIndex];
-            questionTextEl.innerHTML = q.question;
-            answerInputEl.value = "";
-            answerInputEl.focus();
-            feedbackEl.classList.add("hidden");
+    async function loadQuestion(){
+      const q = PROGRESSIVE_QUIZ_SET[currentIndex];
+      qText.innerHTML = q.question;
+      ansInput.value = '';
+      feedback.classList.add('hidden');
+      currentQNumber.textContent = currentIndex + 1;
+      // Wait for MathJax to typeset if available
+      await safeTypeset(qText);
+      ansInput.focus();
+    }
 
-            MathJax.typesetPromise([questionTextEl]);
-            currentQNumberEl.textContent = currentQuestionIndex + 1;
-        }
+    function showFeedback(msg, type){
+      feedback.textContent = msg;
+      feedback.classList.remove('hidden');
+      feedback.className = 'mt-4 p-3 text-center rounded-md';
+      if (type === 'ok') feedback.classList.add('bg-green-200','text-green-800');
+      else if (type === 'bad') feedback.classList.add('bg-red-200','text-red-800');
+      else feedback.classList.add('bg-yellow-100','text-yellow-800');
+    }
 
-        function checkAnswer() {
-            const user = normalize(answerInputEl.value);
-            const correct = normalize(PROGRESSIVE_QUIZ_SET[currentQuestionIndex].answer);
+    async function checkAnswer(){
+      const user = normalize(ansInput.value);
+      const correct = normalize(PROGRESSIVE_QUIZ_SET[currentIndex].answer);
+      if (!user) { showFeedback('Please enter an answer', 'warn'); return; }
 
-            feedbackEl.classList.remove("hidden");
+      if (user === correct) {
+        score++;
+        showFeedback('Correct! Moving on...', 'ok');
+        submitBtn.disabled = true;
+        setTimeout(async ()=> {
+          submitBtn.disabled = false;
+          currentIndex++;
+          if (currentIndex >= PROGRESSIVE_QUIZ_SET.length) showResults();
+          else await loadQuestion();
+        }, 900);
+      } else {
+        showFeedback('Incorrect. Try again.', 'bad');
+      }
+    }
 
-            if (user === correct) {
-                score++;
-                feedbackEl.textContent = "Correct!";
-                feedbackEl.className = "mt-4 p-3 text-center bg-green-200 text-green-800 rounded-md";
-                submitBtn.disabled = true;
+    function showResults(){
+      mainQuiz.classList.add('hidden');
+      resultsArea.classList.remove('hidden');
+      finalScoreEl.textContent = `You scored ${score} out of ${PROGRESSIVE_QUIZ_SET.length}.`;
+      uniqueCodeEl.textContent = 'MTH' + String(score).padStart(2,'0') + '-' + Date.now().toString(36).toUpperCase().slice(-5);
+    }
 
-                setTimeout(() => {
-                    submitBtn.disabled = false;
-                    currentQuestionIndex++;
-                    if (currentQuestionIndex >= PROGRESSIVE_QUIZ_SET.length) showResults();
-                    else loadQuestion();
-                }, 1000);
+    function startQuiz(){
+      instr.classList.add('hidden');
+      mainQuiz.classList.remove('hidden');
+      startTime = Date.now();
+      currentIndex = 0; score = 0;
+      loadQuestion();
+    }
 
-            } else {
-                feedbackEl.textContent = "Incorrect. Try again.";
-                feedbackEl.className = "mt-4 p-3 text-center bg-red-200 text-red-800 rounded-md";
-            }
-        }
-
-        function showResults() {
-            quizArea.classList.add("hidden");
-            resultsArea.classList.remove("hidden");
-
-            finalScoreEl.textContent = `You scored ${score} out of 10.`;
-
-            uniqueCodeEl.textContent =
-                "MTH" + score + "-" + Date.now().toString(36).toUpperCase().slice(-5);
-        }
-
-        function startQuiz() {
-            instructionsPage.classList.add("hidden");
-            mainQuizContainer.classList.remove("hidden");
-
-            startTime = Date.now();
-            totalQCountEl.textContent = PROGRESSIVE_QUIZ_SET.length;
-            loadQuestion();
-        }
-
-        document.getElementById("start-quiz-btn").onclick = startQuiz;
-        submitBtn.onclick = checkAnswer;
-
-        answerInputEl.addEventListener("keyup", (e) => {
-            if (e.key === "Enter") checkAnswer();
-        });
-
-        document.getElementById("restart-btn").onclick = () => {
-            location.reload();
-        };
-    </script>
-
+    startBtn.addEventListener('click', startQuiz);
+    submitBtn.addEventListener('click', checkAnswer);
+    ansInput.addEventListener('keydown', (e)=> { if (e.key === 'Enter') checkAnswer(); });
+    restartBtn.addEventListener('click', ()=> location.reload());
+  </script>
 </body>
 </html>
