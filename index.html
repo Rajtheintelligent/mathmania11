@@ -47,9 +47,18 @@
     </header>
 
     <main id="instructions-page" class="card p-6">
-      <h2 class="text-xl font-bold text-amber-600 mb-3">Welcome</h2>
-      <p class="text-sm text-gray-700">10 questions — answer correctly to move on.</p>
-      <button id="start-quiz-btn" class="btn-primary mt-4 px-4 py-2 rounded-md font-bold w-full">Start Quiz Now</button>
+      <h2 class="text-xl font-bold text-amber-600 mb-3">Welcome to Round 2! (Time Limit: 15 Min)</h2>
+      <p class="text-sm font-semibold text-gray-800 mb-4">Each group will receive a set of 10 progressive questions.</p>
+      
+      <ul class="list-disc list-inside space-y-2 text-sm text-gray-700 ml-4">
+        <li>Each question is displayed on a single slide.</li>
+        <li>When you answer a question **correctly**, you can move on to the next question.</li>
+        <li>On the last slide, a **unique code** and a submission link (GF link) will appear.</li>
+        <li>You **must** paste the unique code into the GF, mention your group details, and submit.</li>
+        <li>The group that finishes first within the given **15-minute** time limit will be declared the winner of Round 2.</li>
+      </ul>
+      
+      <button id="start-quiz-btn" class="btn-primary mt-6 px-4 py-2 rounded-md font-bold w-full">Start Quiz Now</button>
     </main>
 
     <section id="main-quiz-container" class="card p-6 hidden">
@@ -164,12 +173,9 @@
       if (user === correct) {
         score++;
         showFeedback('Correct! Moving on...', 'ok');
-        // PREVENT DOUBLE SUBMISSION
         submitBtn.disabled = true;
-        ansInput.disabled = true;
         setTimeout(async ()=> {
           submitBtn.disabled = false;
-          ansInput.disabled = false;
           currentIndex++;
           if (currentIndex >= PROGRESSIVE_QUIZ_SET.length) showResults();
           else await loadQuestion();
@@ -210,6 +216,5 @@
   });
 </script>
 
-        </div>
     </body>
 </html>
