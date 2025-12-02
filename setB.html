@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Math-Mania Rapid Round Quiz - Progressive</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- MathJax configuration (must be BEFORE the MathJax script) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        packages: ['base']
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+
+  <!-- Load MathJax (single bundle for TeX -> SVG) -->
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f7f7f7; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 5px 10px rgba(0,0,0,0.08); max-width:700px; }
+    .btn-primary { background:#3b82f6; color:#fff; transition:0.1s; }
+    .btn-primary:hover{ background:#2563eb; }
+    #question-text .MathJax { display:inline; }
+    #question-text { user-select:none; -webkit-user-select:none; }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+
+  <div class="w-full max-w-3xl space-y-6">
+
+    <header class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <img src="https://placehold.co/64x64/e0e7ff/3b82f6?text=LOGO" alt="logo" class="h-16 w-16 rounded-full border" />
+        <div>
+          <h1 class="text-2xl font-extrabold">Math-Mania Rapid Round</h1>
+          <p class="text-sm text-gray-600">Progressive difficulty</p>
+        </div>
+      </div>
+      <div class="text-right text-sm text-gray-600">S. Ramanujan</div>
+    </header>
+
+    <main id="instructions-page" class="card p-6">
+      <h2 class="text-xl font-bold text-amber-600 mb-3">Welcome to Round 2! (Time Limit: 15 Min)</h2>
+      <p class="text-sm font-semibold text-gray-800 mb-4">Each group will receive a set of 10 progressive questions.</p>
+      
+      <ul class="list-disc list-inside space-y-2 text-sm text-gray-700 ml-4">
+        <li>Each question is displayed on a single slide.</li>
+        <li>When you answer a question **correctly**, you can move on to the next question.</li>
+        <li>On the last slide, a **unique code** and a submission link (GF link) will appear.</li>
+        <li>You **must** paste the unique code into the GF, mention your group details, and submit.</li>
+        <li>The group that finishes first within the given **15-minute** time limit will be declared the winner of Round 2.</li>
+      </ul>
+      
+      <button id="start-quiz-btn" class="btn-primary mt-6 px-4 py-2 rounded-md font-bold w-full">Start Quiz Now</button>
+    </main>
+
+    <section id="main-quiz-container" class="card p-6 hidden">
+      <div class="mb-4 text-center">
+        Question <span id="current-q-number">1</span> of <span id="total-q-count">10</span>
+      </div>
+
+      <div id="question-card" class="p-4 rounded border bg-blue-50 mb-4">
+        <div id="question-text" class="text-lg font-medium text-center min-h-[3rem]"></div>
+        <div class="mt-4 flex items-center gap-3">
+          <label class="text-sm">Your Answer</label>
+          <input id="answer-input" type="text" class="flex-1 p-2 rounded border" placeholder="Type answer..." />
+        </div>
+      </div>
+
+      <button id="submit-btn" class="btn-primary w-full py-2 rounded-md font-semibold">Submit Answer</button>
+      <div id="feedback" class="mt-4 hidden p-3 rounded-md text-center"></div>
+    </section>
+
+    <section id="results-area" class="card p-6 hidden text-center">
+      <h3 class="text-2xl font-bold text-green-600">Quiz Complete!</h3>
+      <p id="final-score" class="mt-2"></p>
+      <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+        <p class="font-semibold">Your Completion Code</p>
+        <code id="unique-code" class="block mt-2 font-mono text-lg bg-white p-2 rounded"></code>
+      </div>
+      <div class="mt-4 flex justify-center gap-3">
+        <a id="form-link" class="btn-primary px-4 py-2 rounded-md text-white" href="#" target="_blank">Submit</a>
+        <button id="restart-btn" class="px-4 py-2 rounded-md border">Restart</button>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // QUESTIONS (you can keep LaTeX here)
+    const PROGRESSIVE_QUIZ_SET = [
+      // Level 1: Fractions and Ratios
+      { question: "In a jar, the ratio of red marbles to blue marbles is $2:5$. If $\\frac{1}{3}$ of the red marbles are removed, what is the new ratio of red to blue marbles?", answer: "4:15" },
+
+      // Level 2: Integers and Absolute Value
+      { question: "Find the value of $|-15| + 5 - (18 \\div (-3))$.", answer: "26" },
+
+      // Level 3: Area of Triangle (Given Area and Height)
+      { question: "The area of a triangle is $120\\text{ cm}^{2}$. If its height is $15\\text{ cm}$, find the length of its base.", answer: "16" },
+
+      // Level 4: Time, Speed, Distance (Relative Speed Concept)
+      { question: "Two cars start from the same point at the same time and travel in the opposite direction. If their speeds are $50\\text{ km/hr}$ and $60\\text{ km/hr}$, how far apart will they be after 3 hours?", answer: "330" },
+
+      // Level 5: Compound Algebraic Substitution
+      { question: "If $2x + 5 = 15$, what is the value of $3x - 1$?", answer: "14" },
+
+      // Level 6: HOT Percentage (Successive Profit/Loss)
+      { question: "A vendor buys an item for ₹80. He sells it for a $20\\%$ profit to a customer, who then sells it to another person for a $10\\%$ loss. What is the final selling price of the item?", answer: "86.4" },
+
+      // Level 7: HOT Data Handling (Mean/Average Application)
+      { question: "The average score of 5 students in a test is 85. If a new student joins and the average increases to 87, what is the score of the new student?", answer: "97" },
+
+      // Level 8: HOT Geometry (Circumference and Diameter Relation)
+      { question: "If the circumference of a circular track is $88\\text{ m}$, what is the radius of the track (in meters)? (Use $\\pi = \\frac{22}{7}$)", answer: "14" },
+
+      // Level 9: HOT Time and Work
+      { question: "A can complete a piece of work in 10 days, and B can complete the same work in 15 days. If they work together, how many days will it take to complete the work?", answer: "6" },
+
+      // Level 10: Extreme HOT Algebra (Complex Simplification)
+      { question: "If $x = 2$, find the value of $x^{3} - 6x^{2} + 12x - 8$.", answer: "0" }
+    ];
+
+    // DOM refs
+    const startBtn = document.getElementById('start-quiz-btn');
+    const mainQuiz = document.getElementById('main-quiz-container');
+    const instr = document.getElementById('instructions-page');
+    const qText = document.getElementById('question-text');
+    const ansInput = document.getElementById('answer-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const feedback = document.getElementById('feedback');
+    const currentQNumber = document.getElementById('current-q-number');
+    const totalQCount = document.getElementById('total-q-count');
+    const resultsArea = document.getElementById('results-area');
+    const finalScoreEl = document.getElementById('final-score');
+    const uniqueCodeEl = document.getElementById('unique-code');
+    const formLink = document.getElementById('form-link');
+    const restartBtn = document.getElementById('restart-btn');
+
+    let currentIndex = 0;
+    let score = 0;
+    let startTime = 0;
+
+    totalQCount.textContent = PROGRESSIVE_QUIZ_SET.length;
+    formLink.href = "https://docs.google.com/forms/d/e/1FAIpQLSfN8L4X9J-D0vQ6Z7Gk0t_R4yI3oV8hJ9A2T5ePzO0Y2f9c/viewform?usp=sf_link";
+
+    function normalize(a){
+      return String(a||'').toLowerCase().replace(/[^0-9.%\-]/g,'').trim();
+    }
+
+    // Safe typeset helper — only call if MathJax is ready
+    function safeTypeset(element){
+      if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+        return MathJax.typesetPromise([element]).catch(()=>{ /* ignore typeset errors */ });
+      } else {
+        // MathJax not ready — do nothing (content will be plain text)
+        return Promise.resolve();
+      }
+    }
+
+    async function loadQuestion(){
+      const q = PROGRESSIVE_QUIZ_SET[currentIndex];
+      qText.innerHTML = q.question;
+      ansInput.value = '';
+      feedback.classList.add('hidden');
+      currentQNumber.textContent = currentIndex + 1;
+      // Wait for MathJax to typeset if available
+      await safeTypeset(qText);
+      ansInput.focus();
+    }
+
+    function showFeedback(msg, type){
+      feedback.textContent = msg;
+      feedback.classList.remove('hidden');
+      feedback.className = 'mt-4 p-3 text-center rounded-md';
+      if (type === 'ok') feedback.classList.add('bg-green-200','text-green-800');
+      else if (type === 'bad') feedback.classList.add('bg-red-200','text-red-800');
+      else feedback.classList.add('bg-yellow-100','text-yellow-800');
+    }
+
+    async function checkAnswer(){
+      const user = normalize(ansInput.value);
+      const correct = normalize(PROGRESSIVE_QUIZ_SET[currentIndex].answer);
+      if (!user) { showFeedback('Please enter an answer', 'warn'); return; }
+
+      if (user === correct) {
+        score++;
+        showFeedback('Correct! Moving on...', 'ok');
+        submitBtn.disabled = true;
+        setTimeout(async ()=> {
+          submitBtn.disabled = false;
+          currentIndex++;
+          if (currentIndex >= PROGRESSIVE_QUIZ_SET.length) showResults();
+          else await loadQuestion();
+        }, 900);
+      } else {
+        showFeedback('Incorrect. Try again.', 'bad');
+      }
+    }
+
+    function showResults(){
+      mainQuiz.classList.add('hidden');
+      resultsArea.classList.remove('hidden');
+      finalScoreEl.textContent = `You scored ${score} out of ${PROGRESSIVE_QUIZ_SET.length}.`;
+      uniqueCodeEl.textContent = 'MTH' + String(score).padStart(2,'0') + '-' + Date.now().toString(36).toUpperCase().slice(-5);
+    }
+
+    function startQuiz(){
+      instr.classList.add('hidden');
+      mainQuiz.classList.remove('hidden');
+      startTime = Date.now();
+      currentIndex = 0; score = 0;
+      loadQuestion();
+    }
+
+    startBtn.addEventListener('click', startQuiz);
+    submitBtn.addEventListener('click', checkAnswer);
+    ansInput.addEventListener('keydown', (e)=> { if (e.key === 'Enter') checkAnswer(); });
+    restartBtn.addEventListener('click', ()=> location.reload());
+  </script>
+<!-- GOOGLE FORM BUTTON UNDER UNIQUE CODE (FINAL RESULTS AREA) -->
+<script>
+  // Update Google Form link in results section
+  document.addEventListener("DOMContentLoaded", () => {
+    const formBtn = document.getElementById("form-link");
+    if (formBtn) {
+      formBtn.href = "https://forms.gle/4sGanYuUZX91y3MT6";
+    }
+  });
+</script>
+
+    </body>
+</html>
