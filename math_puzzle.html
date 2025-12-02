@@ -48,12 +48,13 @@
             transition: all 0.15s ease-in-out;
             cursor: pointer;
             user-select: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         .solved {
             background-color: #10b981; /* Emerald-500 */
             color: white;
-            animation: pulse-solve 1s infinite alternate;
+            animation: pulse-solve 1.5s infinite alternate;
         }
 
         @keyframes pulse-solve {
@@ -66,6 +67,36 @@
                 box-shadow: 0 0 20px rgba(16, 185, 129, 1);
             }
         }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            animation: slide-in 0.3s ease-out;
+        }
+
+        @keyframes slide-in {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -74,8 +105,14 @@
     <div id="game-container" class="w-full max-w-xl bg-white p-6 md:p-8 rounded-2xl shadow-2xl border-t-8 border-indigo-500">
         
         <header class="text-center mb-6">
-            <h1 class="text-3xl font-extrabold text-indigo-700">The Number Grid Challenge</h1>
-            <p class="text-lg text-gray-500 font-medium">Arrange the tiles in numerical order (1 to 8, with 9 as the blank space).</p>
+            <h1 class="text-3xl font-extrabold text-indigo-700">The Number Grid Challenge (8-Puzzle)</h1>
+            <p class="text-lg text-gray-600 font-medium mt-1">
+                Goal: Arrange the tiles in order 1 through 8.
+            </p>
+            <p class="text-sm text-gray-500 mt-1 p-2 bg-indigo-50 rounded-lg border border-indigo-200">
+                **Solved State:**
+                <span class="font-mono text-indigo-700 font-bold">1 2 3 / 4 5 6 / 7 8 _</span>
+            </p>
         </header>
 
         <div id="puzzle-area" class="mb-6">
@@ -83,7 +120,21 @@
         </div>
 
         <div id="game-controls" class="flex flex-col space-y-4">
-            <div id="status-bar" class="flex justify-between items-center p-3 bg-gray-100 rounded-xl shadow-inner text-gray-700 font-semibold">
+            
+            <!-- Instructions Section -->
+            <div class="p-3 bg-gray-100 rounded-xl">
+                <h3 class="font-bold text-indigo-600 mb-1 flex items-center">
+                    <i class="lucide lucide-info w-4 h-4 mr-1"></i> How to Play
+                </h3>
+                <ol class="list-decimal list-inside text-sm text-gray-700 space-y-0.5">
+                    <li>The empty cell (blank space) is always the final position of the number 9.</li>
+                    <li>Click on any tile that is **horizontally or vertically adjacent** to the blank space.</li>
+                    <li>The tile will slide into the blank space, increasing your move count.</li>
+                    <li>The puzzle is complete when all numbers are in sequential order (1 to 8).</li>
+                </ol>
+            </div>
+            
+            <div id="status-bar" class="flex justify-between items-center p-3 bg-indigo-100 rounded-xl shadow-inner text-indigo-700 font-semibold">
                 <div class="flex items-center">
                     <i class="lucide lucide-shuffle w-5 h-5 mr-2"></i>
                     <span id="moves-counter">Moves: 0</span>
@@ -96,14 +147,26 @@
 
             <button
                 id="reset-btn"
-                class="w-full py-3 bg-lime-500 text-indigo-900 rounded-xl text-xl font-extrabold hover:bg-lime-600 shadow-md transition duration-150 flex items-center justify-center"
+                class="w-full py-3 bg-lime-500 text-indigo-900 rounded-xl text-xl font-extrabold hover:bg-lime-600 shadow-lg transition duration-150 flex items-center justify-center"
             >
                 <i class="lucide lucide-rotate-ccw w-6 h-6 mr-2"></i> New Puzzle (Shuffle)
             </button>
             
-            <div id="message-box" class="min-h-10 text-center text-lg font-bold">
-                <!-- Game messages appear here -->
+            <div id="message-box" class="min-h-8 text-center text-lg font-bold text-indigo-600">
+                <!-- Initial game message appears here -->
             </div>
+        </div>
+    </div>
+    
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <i class="lucide lucide-trophy w-12 h-12 text-yellow-500 mx-auto mb-3"></i>
+            <h2 class="text-3xl font-extrabold text-lime-600 mb-2">PUZZLE SOLVED!</h2>
+            <p id="final-stats" class="text-xl text-gray-700 font-semibold mb-4"></p>
+            <button id="close-modal-btn" class="py-2 px-6 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition">
+                Start New Game
+            </button>
         </div>
     </div>
 
@@ -123,6 +186,9 @@
         const timeDisplay = document.getElementById('time-display');
         const messageBox = document.getElementById('message-box');
         const resetBtn = document.getElementById('reset-btn');
+        const winModal = document.getElementById('win-modal');
+        const finalStats = document.getElementById('final-stats');
+        const closeModalBtn = document.getElementById('close-modal-btn');
 
         // Helper function to create the initial solvable shuffled board
         function createInitialBoard() {
@@ -154,8 +220,12 @@
                 let idx1 = initial.findIndex(val => val !== 0);
                 let idx2 = initial.findIndex((val, index) => val !== 0 && index !== idx1);
                 
-                if (idx1 !== -1 && idx2 !== -1) {
+                // Ensure a swap happens with two different, non-zero tiles
+                if (idx1 !== -1 && idx2 !== -1 && idx1 !== idx2) {
                     [initial[idx1], initial[idx2]] = [initial[idx2], initial[idx1]];
+                } else if (initial.length >= 2 && initial[0] !== 0 && initial[1] !== 0) {
+                     // Fallback to swapping first two if complex find fails
+                    [initial[0], initial[1]] = [initial[1], initial[0]];
                 }
             }
 
@@ -169,7 +239,7 @@
         });
 
         // Convert 2D coordinates to 1D index
-        const toIndex = (row, col) => row * GRID_SIZE + col;
+        // const toIndex = (row, col) => row * GRID_SIZE + col; // Not needed, but good to keep in mind
         
         // --- Core Game Functions ---
 
@@ -183,8 +253,11 @@
             if (timer) clearInterval(timer);
             timer = setInterval(updateTimer, 1000);
             
+            // Close modal if open
+            winModal.style.display = 'none';
+
             updateDisplay();
-            messageBox.innerHTML = '<span class="text-indigo-600">Click a tile next to the blank space to move it.</span>';
+            messageBox.innerHTML = 'Click an adjacent tile to slide it into the blank space.';
         }
 
         function updateTimer() {
@@ -197,9 +270,19 @@
             
             board.forEach((value, index) => {
                 const isBlank = value === 0;
-                const cellClasses = isBlank 
+                let cellClasses = isBlank 
                     ? 'bg-gray-700 cursor-default opacity-0' // Hidden blank space
                     : 'bg-indigo-400 text-white hover:bg-indigo-500 shadow-xl';
+                
+                if (isSolved) {
+                    // Apply solved class to non-blank tiles
+                    if (!isBlank) {
+                        cellClasses = 'solved'; 
+                    } else {
+                        // Keep blank space hidden/dark in solved state
+                        cellClasses = 'bg-gray-700 cursor-default opacity-0';
+                    }
+                }
                 
                 gridHtml += `
                     <div 
@@ -216,10 +299,9 @@
             gridHtml += '</div>';
             puzzleArea.innerHTML = gridHtml;
 
-            // Apply solved class if game is won
+            // Ensure event listeners are correctly set up after re-render
             if (isSolved) {
                  document.querySelectorAll('.grid-cell').forEach(cell => {
-                    cell.classList.add('solved');
                     cell.onclick = null; // Disable clicking
                 });
             }
@@ -252,20 +334,17 @@
                 if (checkWin()) {
                     isSolved = true;
                     clearInterval(timer);
-                    messageBox.innerHTML = `<div class="text-lime-500 text-2xl animate-bounce flex items-center justify-center">
-                        <i class="lucide lucide-award w-6 h-6 mr-2"></i> Puzzle Solved in ${moves} moves and ${seconds} seconds!
-                    </div>`;
-                    // Full re-render to apply 'solved' class and disable clicks
-                    renderGrid(); 
+                    handleWin();
                 } else {
                     updateDisplay();
+                    messageBox.innerHTML = 'Keep going! Slide the next tile.';
                 }
             } else {
-                messageBox.innerHTML = '<span class="text-red-500">You can only move tiles adjacent to the blank space!</span>';
+                messageBox.innerHTML = '<span class="text-red-500">Error: Click a tile right next to the blank space!</span>';
                 // Clear error message after a short delay
                 setTimeout(() => {
                     if (!isSolved) {
-                        messageBox.innerHTML = '<span class="text-indigo-600">Click a tile next to the blank space to move it.</span>';
+                        messageBox.innerHTML = 'Click an adjacent tile to slide it into the blank space.';
                     }
                 }, 1000);
             }
@@ -276,9 +355,17 @@
             return board.every((value, index) => value === FINAL_STATE[index]);
         }
         
+        function handleWin() {
+            renderGrid(); // Apply solved styling
+            finalStats.textContent = `You completed the puzzle in ${moves} moves and ${seconds} seconds!`;
+            winModal.style.display = 'flex'; // Show the modal
+            messageBox.innerHTML = ''; // Clear main message box
+        }
+
         // --- Event Listeners and Initialization ---
 
         resetBtn.addEventListener('click', startGame);
+        closeModalBtn.addEventListener('click', startGame);
 
         window.onload = startGame;
 
