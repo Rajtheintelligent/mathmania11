@@ -196,5 +196,17 @@
     ansInput.addEventListener('keydown', (e)=> { if (e.key === 'Enter') checkAnswer(); });
     restartBtn.addEventListener('click', ()=> location.reload());
   </script>
-</body>
+<!-- GOOGLE FORM BUTTON UNDER UNIQUE CODE (FINAL RESULTS AREA) -->
+<script>
+  // Update Google Form link in results section
+  document.addEventListener("DOMContentLoaded", () => {
+    const formBtn = document.getElementById("form-link");
+    if (formBtn) {
+      formBtn.href = "https://forms.gle/4sGanYuUZX91y3MT6";
+    }
+  });
+</script>
+
+        </div>
+    </body>
 </html>
