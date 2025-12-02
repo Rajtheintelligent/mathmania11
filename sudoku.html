@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Sudoku Puzzle</title>
+    <!-- Load Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        /* Sudoku Grid Container */
+        #sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            border: 4px solid #1f2937;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Cell Styling */
+        .cell {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border: 1px solid #d1d5db; /* Default light border */
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        /* Highlight block borders (3x3 boxes) */
+        .cell:nth-child(3n) { border-right-width: 3px; border-right-color: #374151; }
+        .cell:nth-child(9n + 1) { border-left-width: 3px; border-left-color: #374151; }
+        .cell:nth-child(27n) { border-bottom-width: 3px; border-bottom-color: #374151; }
+        .cell:nth-child(n) { border-bottom-color: #d1d5db; } /* Reset default bottom border */
+        
+        /* Highlight rows for 3x3 box boundary */
+        #sudoku-grid > :nth-child(n+19):nth-child(-n+27),
+        #sudoku-grid > :nth-child(n+46):nth-child(-n+54) {
+            border-bottom-width: 3px;
+            border-bottom-color: #374151;
+        }
+        
+        /* Pre-filled cells (Given numbers) */
+        .given {
+            background-color: #e5e7eb; /* Gray-200 */
+            color: #1f2937; /* Dark text */
+            font-weight: bold;
+            cursor: default;
+        }
+
+        /* Editable cells (User input) */
+        .editable {
+            color: #1d4ed8; /* Blue-700 for user input */
+            font-weight: 700;
+        }
+
+        /* Error state */
+        .error {
+            background-color: #fee2e2 !important; /* Red-100 */
+            color: #dc2626 !important; /* Red-600 */
+        }
+        
+        /* Selected cell */
+        .selected {
+            background-color: #bfdbfe; /* Blue-200 */
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Input Controls (Mobile) */
+        #input-controls {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            max-width: 400px;
+            margin-top: 1rem;
+        }
+        .input-btn {
+            padding: 1rem 0;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 3px #3730a3;
+            transition: all 0.1s;
+        }
+        .input-btn:active {
+            box-shadow: 0 0 #3730a3;
+            transform: translateY(3px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container" class="w-full max-w-sm bg-white p-6 rounded-xl shadow-lg">
+        
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-gray-800">Classic Sudoku</h1>
+            <p id="message-box" class="text-lg text-gray-500 font-medium h-6 mt-2">Ready to solve the puzzle!</p>
+        </header>
+        
+        <div id="status-bar" class="flex justify-between items-center p-3 mb-4 bg-indigo-100 rounded-lg shadow-inner text-indigo-700 font-semibold text-sm">
+            <div class="flex items-center">
+                <i class="lucide lucide-timer w-4 h-4 mr-1"></i>
+                <span id="time-display">Time: 0s</span>
+            </div>
+            <div class="flex items-center">
+                <i class="lucide lucide-x-circle w-4 h-4 mr-1"></i>
+                <span id="error-display">Errors: 0</span>
+            </div>
+        </div>
+
+        <div id="sudoku-grid-wrapper" class="w-full max-w-sm mx-auto">
+            <div id="sudoku-grid">
+                <!-- Grid Cells will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Mobile/Touch Input Controls -->
+        <div id="input-controls" class="mx-auto">
+            <button class="input-btn" data-value="1">1</button>
+            <button class="input-btn" data-value="2">2</button>
+            <button class="input-btn" data-value="3">3</button>
+            <button class="input-btn" data-value="4">4</button>
+            <button class="input-btn" data-value="5">5</button>
+            <button class="input-btn" data-value="6">6</button>
+            <button class="input-btn" data-value="7">7</button>
+            <button class="input-btn" data-value="8">8</button>
+            <button class="input-btn" data-value="9">9</button>
+            <button class="input-btn bg-red-500 hover:bg-red-600 shadow-red-700" data-value="0">
+                <i class="lucide lucide-delete w-5 h-5 mx-auto"></i>
+            </button>
+        </div>
+
+        <button
+            id="new-game-btn"
+            class="w-full mt-6 py-3 bg-lime-500 text-gray-900 rounded-lg text-lg font-bold hover:bg-lime-600 shadow-md transition duration-150 flex items-center justify-center"
+        >
+            <i class="lucide lucide-rotate-ccw w-5 h-5 mr-2"></i> New Puzzle
+        </button>
+    </div>
+    
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <i class="lucide lucide-award w-12 h-12 text-yellow-500 mx-auto mb-3"></i>
+            <h2 class="text-3xl font-extrabold text-lime-600 mb-2">SUDOKU SOLVED!</h2>
+            <p id="final-stats" class="text-xl text-gray-700 font-semibold mb-4"></p>
+            <button id="close-modal-btn" class="py-2 px-6 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600 transition">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Data ---
+        const GRID_SIZE = 9;
+        
+        // Collection of different, pre-defined Sudoku puzzles (0 represents empty cells)
+        const PUZZLE_COLLECTION = [
+            // Puzzle 1 (Easy/Medium)
+            [
+                5, 3, 0, 0, 7, 0, 0, 0, 0,
+                6, 0, 0, 1, 9, 5, 0, 0, 0,
+                0, 9, 8, 0, 0, 0, 0, 6, 0,
+                8, 0, 0, 0, 6, 0, 0, 0, 3,
+                4, 0, 0, 8, 0, 3, 0, 0, 1,
+                7, 0, 0, 0, 2, 0, 0, 0, 6,
+                0, 6, 0, 0, 0, 0, 2, 8, 0,
+                0, 0, 0, 4, 1, 9, 0, 0, 5,
+                0, 0, 0, 0, 8, 0, 0, 7, 9
+            ],
+            // Puzzle 2 (Medium)
+            [
+                0, 2, 0, 6, 0, 8, 0, 0, 0,
+                5, 8, 0, 0, 0, 9, 7, 0, 0,
+                0, 0, 0, 0, 4, 0, 0, 0, 0,
+                3, 7, 0, 0, 0, 0, 5, 0, 0,
+                6, 0, 0, 0, 0, 0, 0, 0, 4,
+                0, 0, 8, 0, 0, 0, 0, 1, 3,
+                0, 0, 0, 0, 2, 0, 0, 0, 0,
+                0, 0, 9, 8, 0, 0, 0, 3, 6,
+                0, 0, 0, 3, 0, 6, 0, 9, 0
+            ],
+            // Puzzle 3 (Hard)
+            [
+                0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 3, 0, 8, 5,
+                0, 0, 1, 0, 2, 0, 0, 0, 0,
+                0, 0, 0, 5, 0, 7, 0, 0, 0,
+                0, 0, 4, 0, 0, 0, 1, 0, 0,
+                0, 9, 0, 0, 0, 0, 0, 0, 0,
+                3, 0, 0, 4, 0, 0, 2, 0, 0,
+                0, 5, 0, 1, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0
+            ]
+        ];
+
+        let board = [];
+        let fixedCells = [];
+        let selectedCellIndex = -1;
+        let timer = null;
+        let seconds = 0;
+        let errorCount = 0;
+
+        const gridElement = document.getElementById('sudoku-grid');
+        const timeDisplay = document.getElementById('time-display');
+        const errorDisplay = document.getElementById('error-display');
+        const messageBox = document.getElementById('message-box');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const winModal = document.getElementById('win-modal');
+        const finalStats = document.getElementById('final-stats');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const inputControls = document.getElementById('input-controls');
+
+        // --- Core Game Functions ---
+
+        function startGame(puzzle = null) {
+            // Select a puzzle if none is provided (or if it's the first run)
+            let newPuzzle = puzzle;
+            if (newPuzzle === null) {
+                const randomIndex = Math.floor(Math.random() * PUZZLE_COLLECTION.length);
+                newPuzzle = PUZZLE_COLLECTION[randomIndex];
+            }
+            
+            board = [...newPuzzle];
+            fixedCells = newPuzzle.map(val => val !== 0);
+            selectedCellIndex = -1;
+            errorCount = 0;
+            seconds = 0;
+
+            if (timer) clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+            
+            winModal.style.display = 'none';
+            messageBox.textContent = 'Use the keyboard or buttons to enter numbers.';
+            
+            renderGrid();
+            updateStats();
+        }
+
+        function updateTimer() {
+            seconds++;
+            timeDisplay.textContent = `Time: ${seconds}s`;
+        }
+        
+        function updateStats() {
+            errorDisplay.textContent = `Errors: ${errorCount}`;
+        }
+
+        // --- Validation Logic ---
+
+        function checkConflict(index, value) {
+            if (value === 0) return false;
+
+            const row = Math.floor(index / GRID_SIZE);
+            const col = index % GRID_SIZE;
+            const blockStartRow = Math.floor(row / 3) * 3;
+            const blockStartCol = Math.floor(col / 3) * 3;
+
+            // Check Row and Column
+            for (let i = 0; i < GRID_SIZE; i++) {
+                // Check Row (same row, different column)
+                if (i !== col && board[row * GRID_SIZE + i] === value) return true;
+                // Check Column (same column, different row)
+                if (i !== row && board[i * GRID_SIZE + col] === value) return true;
+            }
+
+            // Check 3x3 Block
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const checkIndex = (blockStartRow + i) * GRID_SIZE + (blockStartCol + j);
+                    if (checkIndex !== index && board[checkIndex] === value) return true;
+                }
+            }
+
+            return false;
+        }
+
+        function checkAllErrors() {
+            errorCount = 0;
+            let allFilled = true;
+            const cells = document.querySelectorAll('.cell');
+            
+            cells.forEach((cell, index) => {
+                cell.classList.remove('error');
+                const value = board[index];
+
+                if (value === 0) {
+                    allFilled = false;
+                } else if (checkConflict(index, value)) {
+                    cell.classList.add('error');
+                    errorCount++;
+                }
+            });
+
+            updateStats();
+            
+            if (allFilled && errorCount === 0) {
+                handleWin();
+            }
+        }
+
+        // --- Rendering and Input ---
+
+        function renderGrid() {
+            gridElement.innerHTML = ''; // Clear previous grid
+            
+            board.forEach((value, index) => {
+                const isFixed = fixedCells[index];
+                const cell = document.createElement('div');
+                cell.className = `cell ${isFixed ? 'given' : 'editable'}`;
+                cell.dataset.index = index;
+                cell.textContent = value === 0 ? '' : value;
+
+                // Check for conflict immediately (useful when initializing after a value change)
+                if (value !== 0 && checkConflict(index, value)) {
+                    cell.classList.add('error');
+                    errorCount++; // This count will be re-validated by checkAllErrors later
+                }
+
+                if (!isFixed) {
+                    cell.addEventListener('click', () => selectCell(index));
+                }
+                
+                gridElement.appendChild(cell);
+            });
+            
+            // Re-run full error check to update the count and final state check
+            checkAllErrors();
+        }
+        
+        function selectCell(index) {
+            if (fixedCells[index]) return;
+
+            // Deselect previous cell
+            if (selectedCellIndex !== -1) {
+                const prevCell = document.querySelector(`.cell[data-index="${selectedCellIndex}"]`);
+                if (prevCell) prevCell.classList.remove('selected');
+            }
+
+            selectedCellIndex = index;
+            const currentCell = document.querySelector(`.cell[data-index="${index}"]`);
+            if (currentCell) currentCell.classList.add('selected');
+        }
+
+        function handleInput(value) {
+            if (selectedCellIndex === -1 || fixedCells[selectedCellIndex]) return;
+
+            // Value 0 is the delete button
+            const numericValue = parseInt(value);
+
+            // Update board state
+            board[selectedCellIndex] = numericValue;
+            
+            // Update cell content
+            const cellElement = document.querySelector(`.cell[data-index="${selectedCellIndex}"]`);
+            if (cellElement) {
+                cellElement.textContent = numericValue === 0 ? '' : numericValue;
+            }
+
+            // Immediately check and update errors
+            checkAllErrors();
+        }
+
+        // --- Win Condition ---
+        
+        function handleWin() {
+            clearInterval(timer);
+            // Remove selection border
+            if (selectedCellIndex !== -1) {
+                const prevCell = document.querySelector(`.cell[data-index="${selectedCellIndex}"]`);
+                if (prevCell) prevCell.classList.remove('selected');
+            }
+
+            finalStats.textContent = `You solved the puzzle in ${seconds} seconds!`;
+            winModal.style.display = 'flex';
+        }
+
+        // --- Event Listeners ---
+
+        function setupEventListeners() {
+            // Keyboard Input (1-9 and Delete/Backspace)
+            document.addEventListener('keydown', (e) => {
+                if (selectedCellIndex === -1) return;
+
+                let valueToEnter = -1;
+
+                if (e.key >= '1' && e.key <= '9') {
+                    valueToEnter = parseInt(e.key);
+                } else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === '0') {
+                    valueToEnter = 0; // Represents clearing the cell
+                }
+                
+                if (valueToEnter !== -1) {
+                    handleInput(valueToEnter);
+                    e.preventDefault(); // Prevent browser shortcuts
+                }
+            });
+            
+            // Mobile/Touch Input Controls
+            inputControls.addEventListener('click', (e) => {
+                if (e.target.classList.contains('input-btn')) {
+                    const value = e.target.dataset.value;
+                    handleInput(parseInt(value));
+                }
+            });
+
+            // Control Buttons
+            // Call startGame without arguments to trigger a random new puzzle selection
+            newGameBtn.addEventListener('click', () => startGame());
+            closeModalBtn.addEventListener('click', () => startGame());
+        }
+
+        // --- Initialization ---
+
+        window.onload = () => {
+            setupEventListeners();
+            startGame(); // Starts with a random puzzle
+        };
+
+    </script>
+</body>
+</html>
