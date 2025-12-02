@@ -164,9 +164,12 @@
       if (user === correct) {
         score++;
         showFeedback('Correct! Moving on...', 'ok');
+        // PREVENT DOUBLE SUBMISSION
         submitBtn.disabled = true;
+        ansInput.disabled = true;
         setTimeout(async ()=> {
           submitBtn.disabled = false;
+          ansInput.disabled = false;
           currentIndex++;
           if (currentIndex >= PROGRESSIVE_QUIZ_SET.length) showResults();
           else await loadQuestion();
