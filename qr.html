@@ -1,42 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk QR Code Generator (1111 to 1270)</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script> 
+    
     <style>
+        /* --- CSS STYLES --- */
         .qr-container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             padding: 20px;
-            /* Hide the print message when printing to PDF */
-            page-break-after: always;
+            /* Ensures codes break neatly onto new pages when printing */
+            page-break-after: always; 
         }
         .qr-item {
             text-align: center;
             border: 1px solid #ccc;
             padding: 5px;
-            width: 150px; /* Standardize size for printing */
+            width: 150px; /* Standardized size for consistent printing */
             margin-bottom: 20px;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
         }
+        /* Canvas is for screen viewing */
         canvas {
             display: block;
         }
+        /* Image is for printing (fix for blank PDFs) */
+        .qr-item img {
+            display: block;
+            margin: 0 auto;
+            width: 100%; 
+            height: auto;
+        }
+        
+        /* --- Media Queries for Printing --- */
         @media print {
-            p { display: none; } /* Hide instructions when printing */
-            h1 { display: none; }
+            p, h1 { display: none; } /* Hide instructions and header when printing */
+            /* CRUCIAL FIX: Hide canvas and show print-friendly image */
+            .qr-item canvas { display: none !important; }
+            .qr-item img { display: block !important; } 
+        }
+        /* Media Query for Screen Viewing */
+        @media screen {
+            /* Show canvas and hide print-friendly image */
+            .qr-item img { display: none; }
         }
     </style>
 </head>
 <body>
     <h1>Bulk QR Codes: 1111 to 1270</h1>
-    <p>💡 **Instructions:** The codes below are ready. Use your browser's Print function (Ctrl+P or Cmd+P) and select **Save as PDF** as the destination to get all 160 codes in a single file.</p>
+    <p>💡 **Instructions:** The codes below are ready. Use your browser's Print function (**Ctrl+P** or **Cmd+P**) and select **Save as PDF** as the destination to get all 160 codes in a single file.</p>
     
     <div id="qr-codes" class="qr-container">
-        </div>
+    </div>
 
     <script>
+        // --- JAVASCRIPT LOGIC ---
         const container = document.getElementById('qr-codes');
         const startNumber = 1111;
         const endNumber = 1270; // 160 codes total
@@ -44,21 +67,31 @@
         for (let i = startNumber; i <= endNumber; i++) {
             const data = String(i);
 
-            // 1. Create container for the code and number
+            // 1. Create container
             const itemDiv = document.createElement('div');
             itemDiv.className = 'qr-item';
             
-            // 2. Create and configure the QR code object
-            const qr = qrcode(4, 'L'); // Version 4, Error Correction Low
+            // 2. Configure QR code object (Version 4, Error Correction Low)
+            const qr = qrcode(4, 'L'); 
             qr.addData(data);
             qr.make();
 
-            // 3. Create the canvas element (4x size, 1px margin)
+            // 3. Create Canvas element for screen view
             const canvas = qr.createCanvas(4, 1); 
             
-            // 4. Add the code and a label to the page
-            itemDiv.appendChild(canvas);
+            // 4. Convert canvas to PNG Data URL
+            const imageDataUrl = canvas.toDataURL('image/png');
             
+            // 5. Create Image element for print view
+            const img = document.createElement('img');
+            img.src = imageDataUrl;
+            img.alt = `QR Code for ${data}`;
+            
+            // 6. Add elements to the container
+            itemDiv.appendChild(canvas); // Visible on screen
+            itemDiv.appendChild(img);    // Visible on print/PDF
+            
+            // 7. Add numeric label
             const label = document.createElement('div');
             label.textContent = data;
             label.style.marginTop = '5px';
