@@ -3,6 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk QR Code Generator (1111 to 1270) - 100% Local Fix</title>
+    
+    <script>
+    // PASTE ALL THE CODE FROM https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js RIGHT HERE
+    // START PASTE BLOCK
+    // ... hundreds of lines of qrcode.js code ...
+    // END PASTE BLOCK
+    </script>
+    <style>
+        /* --- CSS STYLES --- */
+        .qr-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            page-break-after: always; 
+        }
+        .qr-item {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 5px;
+            width: 150px; 
+            margin-bottom: 20px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .qr-item img {
+            display: block;
+            margin: 0 auto;
+            width: 100px; /* Use explicit size for best rendering */
+            height: 100px;
+        }
+        
+        /* --- Media Queries for Printing --- */
+        @media print {
+            p, h1 { display: none; } 
+        }
+    </style>
+</head>
+<body>
+    <h1>Bulk QR Codes: 1111 to 1270</h1>
+    <p>💡 **Instructions:** The codes below are ready. Use your browser's Print function (**Ctrl+P** or **Cmd+P**) and select **Save as PDF** as the destination.</p>
+    
+    <div id="qr-codes" class="qr-container">
+    </div>
+
+    <script>
+        // --- YOUR JAVASCRIPT LOGIC (Unchanged) ---
+        // This script will now execute AFTER the necessary 'qrcode' function is defined above.
+        const container = document.getElementById('qr-codes');
+        const startNumber = 1111;
+        const endNumber = 1270; 
+
+        for (let i = startNumber; i <= endNumber; i++) {
+            const data = String(i);
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'qr-item';
+            
+            // 1. Configure QR code object (Function 'qrcode' is now guaranteed to exist)
+            const qr = qrcode(4, 'L'); 
+            qr.addData(data);
+            qr.make();
+
+            // 2. Create Canvas, convert to PNG Data URL
+            const canvas = qr.createCanvas(4, 1); 
+            const imageDataUrl = canvas.toDataURL('image/png');
+            
+            // 3. Create and add Image element
+            const img = document.createElement('img');
+            img.src = imageDataUrl;
+            img.alt = `QR Code for ${data}`;
+            
+            // Set explicit size again (must match CSS for consistency)
+            img.width = 100; 
+            img.height = 100;
+            
+            itemDiv.appendChild(img);
+            
+            // 4. Add numeric label
+            const label = document.createElement('div');
+            label.textContent = data;
+            label.style.marginTop = '5px';
+            itemDiv.appendChild(label);
+
+            container.appendChild(itemDiv);
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk QR Code Generator (1111 to 1270) - Image Print Fix</title>
     
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script> 
