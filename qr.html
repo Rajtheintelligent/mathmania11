@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bulk QR Code Generator (1111 to 1270)</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script> 
+    <style>
+        .qr-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            /* Hide the print message when printing to PDF */
+            page-break-after: always;
+        }
+        .qr-item {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 5px;
+            width: 150px; /* Standardize size for printing */
+            margin-bottom: 20px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        canvas {
+            display: block;
+        }
+        @media print {
+            p { display: none; } /* Hide instructions when printing */
+            h1 { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Bulk QR Codes: 1111 to 1270</h1>
+    <p>💡 **Instructions:** The codes below are ready. Use your browser's Print function (Ctrl+P or Cmd+P) and select **Save as PDF** as the destination to get all 160 codes in a single file.</p>
+    
+    <div id="qr-codes" class="qr-container">
+        </div>
+
+    <script>
+        const container = document.getElementById('qr-codes');
+        const startNumber = 1111;
+        const endNumber = 1270; // 160 codes total
+
+        for (let i = startNumber; i <= endNumber; i++) {
+            const data = String(i);
+
+            // 1. Create container for the code and number
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'qr-item';
+            
+            // 2. Create and configure the QR code object
+            const qr = qrcode(4, 'L'); // Version 4, Error Correction Low
+            qr.addData(data);
+            qr.make();
+
+            // 3. Create the canvas element (4x size, 1px margin)
+            const canvas = qr.createCanvas(4, 1); 
+            
+            // 4. Add the code and a label to the page
+            itemDiv.appendChild(canvas);
+            
+            const label = document.createElement('div');
+            label.textContent = data;
+            label.style.marginTop = '5px';
+            itemDiv.appendChild(label);
+
+            container.appendChild(itemDiv);
+        }
+    </script>
+</body>
+</html>
