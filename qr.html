@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk QR Code Generator (1111 to 1270)</title>
+    <title>Bulk QR Code Generator (1111 to 1270) - Image Print Fix</title>
     
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script> 
     
@@ -25,11 +25,7 @@
             margin-bottom: 20px;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
         }
-        /* Canvas is for screen viewing */
-        canvas {
-            display: block;
-        }
-        /* Image is for printing (fix for blank PDFs) */
+        /* Style for the image used for both screen and print */
         .qr-item img {
             display: block;
             margin: 0 auto;
@@ -40,20 +36,12 @@
         /* --- Media Queries for Printing --- */
         @media print {
             p, h1 { display: none; } /* Hide instructions and header when printing */
-            /* CRUCIAL FIX: Hide canvas and show print-friendly image */
-            .qr-item canvas { display: none !important; }
-            .qr-item img { display: block !important; } 
-        }
-        /* Media Query for Screen Viewing */
-        @media screen {
-            /* Show canvas and hide print-friendly image */
-            .qr-item img { display: none; }
         }
     </style>
 </head>
 <body>
     <h1>Bulk QR Codes: 1111 to 1270</h1>
-    <p>💡 **Instructions:** The codes below are ready. Use your browser's Print function (**Ctrl+P** or **Cmd+P**) and select **Save as PDF** as the destination to get all 160 codes in a single file.</p>
+    <p>💡 **Instructions:** The codes below are ready. Use your browser's Print function (**Ctrl+P** or **Cmd+P**) and select **Save as PDF** as the destination. The codes are generated directly as images for best printing reliability.</p>
     
     <div id="qr-codes" class="qr-container">
     </div>
@@ -76,20 +64,21 @@
             qr.addData(data);
             qr.make();
 
-            // 3. Create Canvas element for screen view
+            // 3. Create a temporary Canvas element just for data extraction
             const canvas = qr.createCanvas(4, 1); 
             
-            // 4. Convert canvas to PNG Data URL
+            // 4. Convert canvas to PNG Data URL immediately
             const imageDataUrl = canvas.toDataURL('image/png');
             
-            // 5. Create Image element for print view
+            // 5. Create Image element (This is the only element added to the DOM now)
             const img = document.createElement('img');
             img.src = imageDataUrl;
             img.alt = `QR Code for ${data}`;
+            img.width = 100; // Set explicit size for screen visibility
+            img.height = 100;
             
-            // 6. Add elements to the container
-            itemDiv.appendChild(canvas); // Visible on screen
-            itemDiv.appendChild(img);    // Visible on print/PDF
+            // 6. Add the Image element
+            itemDiv.appendChild(img);
             
             // 7. Add numeric label
             const label = document.createElement('div');
