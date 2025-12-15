@@ -1,14 +1,15 @@
 // --- 1. INITIAL SETUP ---
 
 // Define the initial share prices, tracking the BASE price (for profit/loss calculation)
+// All prices are whole numbers.
 const stocks = {
-    'Bitcoin': { price: 60.00, base: 60.00, history: [60] },
-    'Colgate': { price: 20.00, base: 20.00, history: [20] },
-    'Nifty 50': { price: 50.00, base: 50.00, history: [50] },
-    'Gold': { price: 40.00, base: 40.00, history: [40] },
-    'Sensex': { price: 60.00, base: 60.00, history: [60] },
-    'ICICI Bank': { price: 30.00, base: 30.00, history: [30] },
-    'Suzlon': { price: 20.00, base: 20.00, history: [20] }
+    'Bitcoin': { price: 60, base: 60, history: [60] },
+    'Colgate': { price: 20, base: 20, history: [20] },
+    'Nifty 50': { price: 50, base: 50, history: [50] },
+    'Gold': { price: 40, base: 40, history: [40] },
+    'Sensex': { price: 60, base: 60, history: [60] },
+    'ICICI Bank': { price: 30, base: 30, history: [30] },
+    'Suzlon': { price: 20, base: 20, history: [20] }
 };
 
 const allStockNames = Object.keys(stocks);
@@ -17,25 +18,28 @@ let timeStep = 0;
 // --- 2. CORE LOGIC (PRICE UPDATE) ---
 
 /**
- * Calculates a new price based on a small random percentage change.
+ * Calculates a new price based on a small random whole number change.
  * @param {number} currentPrice - The price before fluctuation.
- * @returns {object} The new price and the change percentage.
+ * @returns {object} The new price and the change amount (in whole rupees).
  */
 function fluctuatePrice(currentPrice) {
-    // Generate a random percentage change between -5% and +5%
-    const minChange = -0.05; // -5%
-    const maxChange = 0.05;  // +5%
+    // Generate a random whole number change between -3 and +3 (in Rupees)
+    const minRupeeChange = -3; 
+    const maxRupeeChange = 3;  
     
-    const percentageChange = Math.random() * (maxChange - minChange) + minChange;
+    // Calculate a random whole number change (e.g., -2, -1, 0, 1, 2, 3)
+    // Math.floor(Math.random() * (max - min + 1)) + min;
+    const rupeeChange = Math.floor(Math.random() * (maxRupeeChange - minRupeeChange + 1)) + minRupeeChange;
     
-    let newPrice = currentPrice * (1 + percentageChange);
+    let newPrice = currentPrice + rupeeChange;
     
-    // Ensure the price doesn't drop too low, especially for low-priced stocks
-    newPrice = Math.max(5, parseFloat(newPrice.toFixed(2))); 
+    // Ensure the price doesn't drop too low (min price is 5)
+    newPrice = Math.max(5, newPrice); 
 
+    // Ensure the price remains a whole number
     return {
-        price: newPrice,
-        change: parseFloat((percentageChange * 100).toFixed(2)) // Percentage change
+        price: Math.round(newPrice),
+        change: rupeeChange 
     };
 }
 
@@ -51,9 +55,9 @@ function updateMarket() {
         const stock = stocks[name];
         const { price, change } = fluctuatePrice(stock.price);
         
-        // --- Calculate Profit/Loss (₹) ---
-        // Profit/Loss is calculated against the initial BASE price for the game
-        const absoluteChange = price - stock.base; 
+        // --- Calculate Total Profit/Loss (₹) per Share ---
+        // P/L is calculated against the initial BASE price (the student's cost)
+        const totalProfitLossPerShare = price - stock.base; 
         
         // Update the stock object for the next interval
         stock.price = price;
@@ -62,7 +66,7 @@ function updateMarket() {
         
         // --- Determine Visuals ---
         const priceClass = change >= 0 ? 'price-up' : 'price-down';
-        const trendClass = change > 0.01 ? 'trend-up' : (change < -0.01 ? 'trend-down' : 'trend-neutral');
+        const trendClass = change > 0 ? 'trend-up' : (change < 0 ? 'trend-down' : 'trend-neutral');
         const changeSign = change >= 0 ? '▲' : '▼';
         
         
@@ -72,16 +76,17 @@ function updateMarket() {
         // 1. Company Name
         row.insertCell(0).textContent = name; 
         
-        // 2. Current Price
-        row.insertCell(1).textContent = price.toFixed(2);
+        // 2. Current Price (Whole Number)
+        row.insertCell(1).textContent = price;
         
-        // 3. Change Percentage
+        // 3. Change (in ₹)
         const cell3 = row.insertCell(2);
-        cell3.innerHTML = `<div class="${priceClass}">${changeSign} ${Math.abs(change).toFixed(2)}%</div>`;
+        cell3.innerHTML = `<div class="${priceClass}">${changeSign} ${Math.abs(change)}</div>`;
         
-        // 4. Profit/Loss (₹) - Absolute value difference from BASE PRICE
+        // 4. Total P/L Per Share (₹) - Absolute difference from BASE PRICE
         const cell4 = row.insertCell(3);
-        cell4.innerHTML = `<div class="${priceClass}">${absoluteChange >= 0 ? '↑' : '↓'} ${Math.abs(absoluteChange).toFixed(2)}</div>`;
+        const plSign = totalProfitLossPerShare >= 0 ? '↑' : '↓';
+        cell4.innerHTML = `<div class="${priceClass}">${plSign} ${Math.abs(totalProfitLossPerShare)}</div>`;
 
         // 5. Trend Visualizer
         const cell5 = row.insertCell(4);
