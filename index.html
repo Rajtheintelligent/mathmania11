@@ -6,7 +6,7 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
         h1 { color: #2c3e50; text-align: center; }
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 1000px; margin: 0 auto; }
         #ticker-area { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         
         /* Table Styling */
@@ -53,8 +53,8 @@
                     <tr>
                         <th>Company</th>
                         <th>Current Price (₹)</th>
-                        <th>Change (%)</th>
-                        <th>Profit/Loss (₹)</th> 
+                        <th>Change (₹)</th>
+                        <th>Total P/L Per Share (₹)</th> 
                         <th>Trend</th>
                     </tr>
                 </thead>
@@ -63,7 +63,7 @@
             </table>
             
             <p style="margin-top: 20px; font-size: 14px;">
-                <span class="price-up">▲</span> = Profit | <span class="price-down">▼</span> = Loss | **Note:** Use the *Current Price* for all buying/selling calculations.
+                <span class="price-up">▲</span> = Profit | <span class="price-down">▼</span> = Loss | **Note:** The P/L column shows the profit/loss if you bought one share at the starting base price.
             </p>
         </div>
     </div>
