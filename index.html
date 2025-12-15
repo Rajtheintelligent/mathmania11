@@ -6,29 +6,56 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
         h1 { color: #2c3e50; text-align: center; }
-        .container { display: flex; gap: 30px; max-width: 1200px; margin: 0 auto; }
-        #ticker-area { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        #chart-area { flex: 2; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #3498db; color: white; }
+        .container { max-width: 900px; margin: 0 auto; }
+        #ticker-area { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; }
+        th { background-color: #34495e; color: white; font-size: 14px; }
+        
+        /* Price Change Styling */
         .price-up { color: green; font-weight: bold; }
         .price-down { color: red; font-weight: bold; }
+        .price-neutral { color: gray; }
+
+        /* Simplified Trend Visualizer (mimics small graph) */
+        .trend-visual { 
+            display: inline-block; 
+            width: 40px; 
+            height: 15px; 
+            border: 1px solid #ccc; 
+            position: relative;
+            overflow: hidden;
+            border-radius: 3px;
+        }
+        .trend-fill { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%;
+            transition: height 0.5s; /* Smooth visual update */
+        }
+        .trend-up .trend-fill { background-color: #2ecc71; } /* Green */
+        .trend-down .trend-fill { background-color: #e74c3c; } /* Red */
+        .trend-neutral .trend-fill { background-color: #bdc3c7; height: 100% !important; } /* Gray/Stable */
+        
+        .change-cell { display: flex; align-items: center; gap: 8px; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 </head>
 <body>
     <h1>📈 MathMania Share Market Ticker (Updates Every 15 Seconds)</h1>
     <div class="container">
-        
         <div id="ticker-area">
-            <h2>Current Share Prices (Base Price)</h2>
+            <h2>Current Market Data</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Company</th>
                         <th>Current Price (₹)</th>
                         <th>Change (%)</th>
+                        <th>Profit/Loss (₹)</th> 
+                        <th>Trend</th>
                     </tr>
                 </thead>
                 <tbody id="stock-ticker-body">
@@ -36,13 +63,8 @@
             </table>
             
             <p style="margin-top: 20px; font-size: 14px;">
-                <span class="price-up">▲</span> = Profit | <span class="price-down">▼</span> = Loss
+                <span class="price-up">▲</span> = Profit | <span class="price-down">▼</span> = Loss | **Note:** Use the *Current Price* for all buying/selling calculations.
             </p>
-        </div>
-
-        <div id="chart-area">
-            <h2>Market Trend Graph</h2>
-            <canvas id="marketChart"></canvas>
         </div>
     </div>
 
