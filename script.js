@@ -1,56 +1,20 @@
 // --- 1. INITIAL SETUP ---
 
-// Define the initial share prices and track history for the graph
+// Define the initial share prices, tracking the BASE price (for profit/loss calculation)
 const stocks = {
-    'Bitcoin': { price: 60, base: 60, color: 'rgb(255, 99, 132)', history: [60] },
-    'Colgate': { price: 20, base: 20, color: 'rgb(54, 162, 235)', history: [20] },
-    'Nifty 50': { price: 50, base: 50, color: 'rgb(255, 206, 86)', history: [50] },
-    'Gold': { price: 40, base: 40, color: 'rgb(75, 192, 192)', history: [40] },
-    'Sensex': { price: 60, base: 60, color: 'rgb(153, 102, 255)', history: [60] },
-    'ICICI Bank': { price: 30, base: 30, color: 'rgb(255, 159, 64)', history: [30] },
-    'Suzlon': { price: 20, base: 20, color: 'rgb(199, 199, 199)', history: [20] }
+    'Bitcoin': { price: 60.00, base: 60.00, history: [60] },
+    'Colgate': { price: 20.00, base: 20.00, history: [20] },
+    'Nifty 50': { price: 50.00, base: 50.00, history: [50] },
+    'Gold': { price: 40.00, base: 40.00, history: [40] },
+    'Sensex': { price: 60.00, base: 60.00, history: [60] },
+    'ICICI Bank': { price: 30.00, base: 30.00, history: [30] },
+    'Suzlon': { price: 20.00, base: 20.00, history: [20] }
 };
 
-// You can adjust this list as needed.
 const allStockNames = Object.keys(stocks);
-let timeLabels = [0]; // Tracks the update cycles for the graph
+let timeStep = 0;
 
-// --- 2. CHART.JS CONFIGURATION ---
-
-const ctx = document.getElementById('marketChart').getContext('2d');
-const marketChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: timeLabels,
-        datasets: allStockNames.map(name => ({
-            label: name,
-            data: stocks[name].history,
-            borderColor: stocks[name].color,
-            borderWidth: 2,
-            fill: false,
-            tension: 0.1
-        }))
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                title: { display: true, text: 'Price (₹)' },
-                beginAtZero: false // Prices don't have to start at 0
-            },
-            x: {
-                title: { display: true, text: 'Time (15 sec intervals)' }
-            }
-        },
-        plugins: {
-            legend: { position: 'top' },
-            title: { display: true, text: 'Share Price Movements Over Time' }
-        }
-    }
-});
-
-// --- 3. CORE LOGIC (PRICE UPDATE) ---
+// --- 2. CORE LOGIC (PRICE UPDATE) ---
 
 /**
  * Calculates a new price based on a small random percentage change.
@@ -59,41 +23,51 @@ const marketChart = new Chart(ctx, {
  */
 function fluctuatePrice(currentPrice) {
     // Generate a random percentage change between -5% and +5%
-    // This keeps the fluctuations manageable for Grade 6 math.
     const minChange = -0.05; // -5%
     const maxChange = 0.05;  // +5%
     
-    // Get a random change (e.g., 0.03 for 3%, or -0.02 for -2%)
     const percentageChange = Math.random() * (maxChange - minChange) + minChange;
     
-    const newPrice = currentPrice * (1 + percentageChange);
+    let newPrice = currentPrice * (1 + percentageChange);
     
-    // Keep price rounded to 2 decimal places (like real money)
+    // Ensure the price doesn't drop too low, especially for low-priced stocks
+    newPrice = Math.max(5, parseFloat(newPrice.toFixed(2))); 
+
     return {
-        price: Math.max(1, parseFloat(newPrice.toFixed(2))), // Price cannot go below 1
+        price: newPrice,
         change: parseFloat((percentageChange * 100).toFixed(2)) // Percentage change
     };
 }
 
 /**
- * Updates the prices of all shares, the ticker table, and the graph.
+ * Updates the prices of all shares and the ticker table.
  */
 function updateMarket() {
+    timeStep++;
     const tickerBody = document.getElementById('stock-ticker-body');
     tickerBody.innerHTML = ''; // Clear the table
 
-    allStockNames.forEach((name, index) => {
+    allStockNames.forEach((name) => {
         const stock = stocks[name];
         const { price, change } = fluctuatePrice(stock.price);
         
-        // Update the stock object
+        // --- Calculate Profit/Loss (₹) ---
+        // Profit/Loss is calculated against the initial BASE price for the game
+        const absoluteChange = price - stock.base; 
+        
+        // Update the stock object for the next interval
         stock.price = price;
         stock.history.push(price);
         
+        
+        // --- Determine Visuals ---
+        const priceClass = change >= 0 ? 'price-up' : 'price-down';
+        const trendClass = change > 0.01 ? 'trend-up' : (change < -0.01 ? 'trend-down' : 'trend-neutral');
+        const changeSign = change >= 0 ? '▲' : '▼';
+        
+        
         // --- Update Table (Ticker) ---
         const row = tickerBody.insertRow();
-        const priceClass = change >= 0 ? 'price-up' : 'price-down';
-        const changeSign = change >= 0 ? '▲' : '▼';
         
         // 1. Company Name
         row.insertCell(0).textContent = name; 
@@ -102,25 +76,37 @@ function updateMarket() {
         row.insertCell(1).textContent = price.toFixed(2);
         
         // 3. Change Percentage
-        const changeCell = row.insertCell(2);
-        changeCell.innerHTML = `${changeSign} ${Math.abs(change).toFixed(2)}%`;
-        changeCell.className = priceClass;
+        const cell3 = row.insertCell(2);
+        cell3.innerHTML = `<div class="${priceClass}">${changeSign} ${Math.abs(change).toFixed(2)}%</div>`;
         
-        // --- Update Graph Dataset ---
-        marketChart.data.datasets[index].data = stock.history;
+        // 4. Profit/Loss (₹) - Absolute value difference from BASE PRICE
+        const cell4 = row.insertCell(3);
+        cell4.innerHTML = `<div class="${priceClass}">${absoluteChange >= 0 ? '↑' : '↓'} ${Math.abs(absoluteChange).toFixed(2)}</div>`;
+
+        // 5. Trend Visualizer
+        const cell5 = row.insertCell(4);
+        // We use the entire history range to set the height (simple visual)
+        const currentMax = Math.max(...stock.history);
+        const currentMin = Math.min(...stock.history);
+        let trendHeight;
+
+        if (currentMax === currentMin) {
+            trendHeight = 100; // Stable
+        } else {
+            // Calculate where the current price sits between the min and max historical price (0-100%)
+            trendHeight = ((stock.price - currentMin) / (currentMax - currentMin)) * 100;
+        }
+
+        cell5.innerHTML = `
+            <div class="trend-visual ${trendClass}">
+                <div class="trend-fill" style="height: ${Math.round(trendHeight)}%;"></div>
+            </div>`;
     });
-
-    // Update the time label for the graph
-    timeLabels.push(timeLabels.length);
-    marketChart.data.labels = timeLabels;
-
-    // Redraw the chart
-    marketChart.update();
     
-    console.log(`Market updated at time step: ${timeLabels.length - 1}`);
+    console.log(`Market updated at time step: ${timeStep}`);
 }
 
-// --- 4. START GAME TIMER ---
+// --- 3. START GAME TIMER ---
 
 // Initial update on page load
 updateMarket(); 
