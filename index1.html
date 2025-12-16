@@ -1,181 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>MathMania Treasure</title>
-<style>
-    body {
-        margin: 0;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: radial-gradient(circle at top, #1e3c72, #2a5298);
-        font-family: 'Comic Sans MS', cursive;
-        overflow: hidden;
+  <meta charset="UTF-8">
+  <title>MathMania Treasure Unlocked</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Floating math symbols */
+    .float {
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
     }
 
-    .container {
-        text-align: center;
-        color: white;
+    /* Chest animation */
+    .lid-open {
+      transform: rotateX(140deg);
     }
 
-    h1 {
-        margin-bottom: 40px;
-        font-size: 2.5rem;
-        letter-spacing: 2px;
+    /* Glow pulse */
+    .pulse-glow {
+      animation: glow 2s infinite;
+    }
+    @keyframes glow {
+      0% { box-shadow: 0 0 10px gold; }
+      50% { box-shadow: 0 0 35px gold; }
+      100% { box-shadow: 0 0 10px gold; }
     }
 
-    /* Treasure Box */
-    .treasure {
-        position: relative;
-        width: 220px;
-        height: 160px;
-        margin: auto;
-        cursor: pointer;
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
     }
-
-    .lid {
-        position: absolute;
-        top: 0;
-        width: 100%;
-        height: 60px;
-        background: #8b4513;
-        border-radius: 10px 10px 0 0;
-        transform-origin: bottom;
-        transition: transform 1s ease;
-        z-index: 2;
-        border: 4px solid #5a2e0e;
-    }
-
-    .box {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        height: 120px;
-        background: #a0522d;
-        border-radius: 0 0 12px 12px;
-        border: 4px solid #5a2e0e;
-        box-sizing: border-box;
-    }
-
-    .lock {
-        position: absolute;
-        top: 55px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 30px;
-        height: 40px;
-        background: gold;
-        border-radius: 5px;
-        z-index: 3;
-    }
-
-    /* Coins Glow */
-    .glow {
-        position: absolute;
-        inset: -20px;
-        background: radial-gradient(circle, gold, transparent 70%);
-        opacity: 0;
-        transition: opacity 1s ease;
-        pointer-events: none;
-    }
-
-    /* Open state */
-    .open .lid {
-        transform: rotateX(130deg);
-    }
-
-    .open .glow {
-        opacity: 1;
-    }
-
-    /* Popup */
-    .popup {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        visibility: hidden;
-    }
-
-    .popup-content {
-        background: white;
-        color: #333;
-        padding: 30px 40px;
-        border-radius: 20px;
-        text-align: center;
-        animation: pop 0.6s ease;
-        max-width: 90%;
-    }
-
-    .popup-content h2 {
-        color: #2a5298;
-        margin-bottom: 10px;
-        font-size: 2rem;
-    }
-
-    .popup-content p {
-        font-size: 1.3rem;
-    }
-
-    .popup.show {
-        visibility: visible;
-    }
-
-    @keyframes pop {
-        from {
-            transform: scale(0.5);
-            opacity: 0;
-        }
-        to {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-</style>
+  </style>
 </head>
-<body>
 
-<div class="container">
-    <h1>🏆 MathMania Treasure 🏆</h1>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-black flex items-center justify-center overflow-hidden text-white">
 
-    <div class="treasure" id="treasure">
-        <div class="glow"></div>
-        <div class="lid"></div>
-        <div class="box"></div>
-        <div class="lock"></div>
-    </div>
+  <!-- Floating Math Symbols -->
+  <div class="absolute inset-0 text-4xl opacity-20 select-none">
+    <span class="absolute top-10 left-20 float">+</span>
+    <span class="absolute top-40 right-32 float">÷</span>
+    <span class="absolute bottom-32 left-24 float">×</span>
+    <span class="absolute bottom-20 right-40 float">π</span>
+    <span class="absolute top-1/2 left-1/2 float">√</span>
+  </div>
 
-    <p>Click the treasure box to open!</p>
-</div>
-
-<div class="popup" id="popup">
-    <div class="popup-content">
-        <h2>🎉 Congratulations! 🎉</h2>
-        <p>Yeah! You have conquered the <b>MathMania Quiz Round</b> 🧠✨</p>
-        <p>You are true math treasure hunters! 🏆</p>
-    </div>
-</div>
-
-<script>
-    const treasure = document.getElementById("treasure");
-    const popup = document.getElementById("popup");
-
-    treasure.addEventListener("click", () => {
-        treasure.classList.add("open");
-
-        setTimeout(() => {
-            popup.classList.add("show");
-        }, 1000);
-    });
-
-    popup.addEventListener("click", () => {
-        popup.classList.remove("show");
-    });
-</script>
-
-</body>
-</html>
+  <!-- Main Content -->
+  <div class="text-center z-10">
+    <h1 class="
