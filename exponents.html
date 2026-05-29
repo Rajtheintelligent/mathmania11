@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 7 Exponent Exploder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .input-group label {
+            margin-bottom: 8px;
+        }
+
+        .base-label { color: #2980b9; }
+        .exp-label { color: #e74c3c; }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 10px;
+            font-size: 18px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        input#base { border-color: #2980b9; color: #2980b9;}
+        input#exponent { border-color: #e74c3c; color: #e74c3c;}
+
+        button {
+            padding: 10px 25px;
+            font-size: 18px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            align-self: flex-end;
+        }
+
+        button:hover {
+            background-color: #219a52;
+        }
+
+        .display-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .display-workspace { grid-template-columns: 1fr; }
+        }
+
+        .text-feedback {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .math-box {
+            font-size: 22px;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+            border-left: 5px solid #27ae60;
+        }
+
+        .base-text { color: #2980b9; font-weight: bold; }
+        .exp-text { color: #e74c3c; font-weight: bold; }
+
+        .misconception-warning {
+            background-color: #fadbd8;
+            border-left: 5px solid #e74c3c;
+            color: #78281f;
+            font-size: 16px;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        canvas {
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💥 The Exponent Exploder</h1>
+    
+    <div class="control-panel">
+        <div class="input-group">
+            <label class="base-label" for="base">Base</label>
+            <input type="number" id="base" min="1" max="6" value="3">
+        </div>
+        <div class="input-group">
+            <label class="exp-label" for="exponent">Exponent</label>
+            <input type="number" id="exponent" min="0" max="6" value="3">
+        </div>
+        <button onclick="visualizeExponents()">Explode! 🚀</button>
+    </div>
+
+    <div class="display-workspace">
+        <div class="text-feedback">
+            <div class="math-box">
+                <strong>Exponential Form:</strong> <span id="expForm">3<sup>3</sup></span>
+            </div>
+            <div class="math-box" style="border-left-color: #2980b9;">
+                <strong>What it means (Expanded Form):</strong> <br>
+                <span id="expandedForm">3 × 3 × 3</span>
+            </div>
+            <div class="math-box" style="border-left-color: #8e44ad;">
+                <strong>Standard Value:</strong> <br>
+                <span id="standardValue">27</span>
+            </div>
+            <div class="misconception-warning" id="warningBox">
+                <strong>⚠️ Teacher Alert Check:</strong> <br>
+                Did you think it was <span id="wrongMath">3 × 3 = 9</span>? <br>
+                Notice how much bigger the real answer is! Exponents multiply the number by itself.
+            </div>
+        </div>
+
+        <div>
+            <h3 style="text-align: center; margin-top: 0; color: #34495e;">Visual Block Count</h3>
+            <canvas id="visualCanvas" width="400" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    function visualizeExponents() {
+        const base = parseInt(document.getElementById('base').value);
+        const exponent = parseInt(document.getElementById('exponent').value);
+        
+        // Input Validations to keep canvas representation safe
+        if (isNaN(base) || isNaN(exponent) || base < 1 || exponent < 0) {
+            alert("Please enter a positive base and exponent.");
+            return;
+        }
+        if (Math.pow(base, exponent) > 1000) {
+            alert("To prevent your screen from freezing, please choose numbers that result in less than 1000 blocks!");
+            return;
+        }
+
+        // 1. Calculate Values
+        const standardVal = Math.pow(base, exponent);
+        const wrongVal = base * exponent;
+
+        // 2. Update Text Interface Elements
+        document.getElementById('expForm').innerHTML = `<span class="base-text">${base}</span><sup class="exp-text">${exponent}</sup>`;
+        
+        // Build Expanded Chain
+        if (exponent === 0) {
+            document.getElementById('expandedForm').innerHTML = "Any non-zero number to the power of 0 is always <strong style='color:#2980b9;'>1</strong>";
+            document.getElementById('standardValue').innerText = "1";
+        } else {
+            let chain = [];
+            for(let i=0; i<exponent; i++) {
+                chain.push(`<span class="base-text">${base}</span>`);
+            }
+            document.getElementById('expandedForm').innerHTML = chain.join(' × ');
+            document.getElementById('standardValue').innerText = standardVal;
+        }
+
+        // Dynamic Misconception Text
+        document.getElementById('wrongMath').innerHTML = `<span class="base-text">${base}</span> × <span class="exp-text">${exponent}</span> = ${wrongVal}`;
+
+        // 3. Canvas Rendering Logic
+        const canvas = document.getElementById('visualCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (standardVal === 1) {
+            // Special Case for 1 or power of 0
+            drawBlock(ctx, canvas.width/2 - 15, canvas.height/2 - 15, 30, "#27ae60");
+            return;
+        }
+
+        // Calculate dynamic layouts for boxes based on total count
+        const totalBlocks = standardVal;
+        
+        // Determine grid size (square root layout approach)
+        const columns = Math.ceil(Math.sqrt(totalBlocks));
+        const rows = Math.ceil(totalBlocks / columns);
+        
+        // Sizing configurations based on density
+        const padding = 4;
+        const availableWidth = canvas.width - 40;
+        const availableHeight = canvas.height - 40;
+        
+        const blockSize = Math.min((availableWidth / columns) - padding, (availableHeight / rows) - padding, 40);
+
+        // Center calculation offsets
+        const startX = (canvas.width - (columns * (blockSize + padding))) / 2;
+        const startY = (canvas.height - (rows * (blockSize + padding))) / 2;
+
+        let blockCounter = 0;
+
+        // Draw Loop
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < columns; c++) {
+                if (blockCounter >= totalBlocks) break;
+
+                const x = startX + c * (blockSize + padding);
+                const y = startY + r * (blockSize + padding);
+
+                // Alternating colors between groups of 'base' to show repeated structure
+                const groupIndex = Math.floor(blockCounter / base);
+                const color = groupIndex % 2 === 0 ? "#2980b9" : "#3498db";
+
+                drawBlock(ctx, x, y, blockSize, color);
+                blockCounter++;
+            }
+        }
+    }
+
+    function drawBlock(ctx, x, y, size, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, size, size);
+        ctx.strokeStyle = "#2c3e50";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x, y, size, size);
+    }
+
+    // Run once on load to initialize defaults
+    window.onload = visualizeExponents;
+</script>
+
+</body>
+</html>
