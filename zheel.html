@@ -1,7 +1,30 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Zeel's Chocolate Challenge</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZRCD3LH5KB"></script>
+
+    <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag(){
+        dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-ZRCD3LH5KB');
+
+    // Track game opening
+    gtag('event', 'chocolate_challenge_started', {
+        game_name: 'ChocolateChallenge'
+    });
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -28,6 +51,10 @@
             background: #ffcc80;
         }
 
+        button:hover {
+            background: #ffb74d;
+        }
+
         input {
             padding: 10px;
             font-size: 16px;
@@ -42,11 +69,19 @@
             color: green;
             font-weight: bold;
         }
+
+        #error {
+            display: none;
+            margin-top: 15px;
+            color: #d32f2f;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="box">
+
     <h1>🍫 Zeel's Chocolate Challenge 🍫</h1>
 
     <p><b>Question 1:</b> 12 + 18 = ?</p>
@@ -59,32 +94,74 @@
     <input id="q3">
 
     <br><br>
-    <button onclick="checkAnswers()">Unlock Chocolate Box</button>
+
+    <button onclick="checkAnswers()">
+        Unlock Chocolate Box
+    </button>
+
+    <div id="error">
+        🍫 Not quite! Try again. 😊
+    </div>
 
     <div id="message">
-        🎉 Congratulations Zeel! 🎉<br><br>
-        🍫 Milkybar Unlocked<br>
-        🍫 Kit Kat Unlocked<br><br>
-        Dear Zeel,<br>
-        If I made a mistake, I'm sorry.<br>
-        I value our friendship and hope we can talk again.<br>
+
+        🎉 Congratulations Zeel! 🎉
+
+        <br><br>
+
+        🍫 Milkybar Unlocked
+        <br>
+        🍫 Kit Kat Unlocked
+
+        <br><br>
+
+        Dear Zeel,
+
+        <br><br>
+
+        If I made a mistake, I'm sorry.
+        <br>
+        I value our friendship and hope we can talk again.
+
+        <br><br>
+
         You are awesome! 😊
+
     </div>
+
 </div>
 
 <script>
-function checkAnswers() {
-    let a1 = document.getElementById("q1").value;
-    let a2 = document.getElementById("q2").value;
-    let a3 = document.getElementById("q3").value;
 
-    if(a1 == "30" && a2 == "80" && a3 == "4") {
-        document.getElementById("message").style.display = "block";
+function checkAnswers() {
+
+    let a1 = document.getElementById("q1").value.trim();
+    let a2 = document.getElementById("q2").value.trim();
+    let a3 = document.getElementById("q3").value.trim();
+
+    const errorBox = document.getElementById("error");
+    const messageBox = document.getElementById("message");
+
+    if(a1 === "30" && a2 === "80" && a3 === "4") {
+
+        // Track successful completion
+        gtag('event', 'chocolate_challenge_completed', {
+            game_name: 'ChocolateChallenge'
+        });
+
+        errorBox.style.display = "none";
+        messageBox.style.display = "block";
+
     } else {
-        alert("Oops! One or more answers are incorrect. Try again! 😊");
+
+        messageBox.style.display = "none";
+        errorBox.style.display = "block";
+
     }
 }
+
 </script>
 
 </body>
 </html>
+```
