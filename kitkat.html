@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Catch the KitKat 🍫</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(to bottom,#87CEEB,#E6F7FF);
+    text-align:center;
+}
+
+h1{
+    margin-top:20px;
+}
+
+#gameArea{
+    width:100vw;
+    height:100vh;
+    position:relative;
+}
+
+#kitkat{
+    position:absolute;
+    font-size:60px;
+    cursor:pointer;
+    user-select:none;
+    transition:0.2s;
+}
+
+#counter{
+    font-size:22px;
+    margin-top:10px;
+}
+
+#message{
+    display:none;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 0 20px rgba(0,0,0,0.3);
+    max-width:500px;
+}
+
+button{
+    padding:10px 20px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍫 Catch the Escaping KitKat 🍫</h1>
+<div id="counter">Attempts: 0</div>
+
+<div id="gameArea">
+    <div id="kitkat">🍫</div>
+
+    <div id="message">
+        <h2>🎉 You Caught It! 🎉</h2>
+
+        <p>
+        Dear Zeel,<br><br>
+
+        You chased this KitKat better than solving a tricky math problem. 😊<br><br>
+
+        If I upset you, I'm sorry.<br>
+        I miss talking to you and hope we can be friends again.<br><br>
+
+        Also, you've officially earned:
+        <br><br>
+        🍫 KitKat × 1<br>
+        🍫 Milkybar × 1
+        </p>
+
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+
+<script>
+
+const kitkat = document.getElementById("kitkat");
+const counter = document.getElementById("counter");
+const message = document.getElementById("message");
+
+let attempts = 0;
+
+function moveKitKat(){
+
+    let maxX = window.innerWidth - 100;
+    let maxY = window.innerHeight - 150;
+
+    let x = Math.random() * maxX;
+    let y = Math.random() * maxY;
+
+    kitkat.style.left = x + "px";
+    kitkat.style.top = y + "px";
+}
+
+moveKitKat();
+
+kitkat.addEventListener("mouseover", () => {
+
+    if(attempts < 10){
+        moveKitKat();
+    }
+
+});
+
+kitkat.addEventListener("click", () => {
+
+    attempts++;
+    counter.innerHTML = "Attempts: " + attempts;
+
+    if(attempts < 10){
+
+        const funnyMessages = [
+            "Too slow 😄",
+            "Almost got me!",
+            "Math teachers need faster reflexes!",
+            "KitKat escaped!",
+            "Try again!",
+            "🍫 Zoom!"
+        ];
+
+        alert(funnyMessages[Math.floor(Math.random()*funnyMessages.length)]);
+        moveKitKat();
+
+    }else{
+
+        kitkat.style.display="none";
+        message.style.display="block";
+
+    }
+});
+
+</script>
+
+</body>
+</html>
