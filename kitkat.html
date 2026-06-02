@@ -1,8 +1,10 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Catch the KitKat 🍫</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catch the Escaping KitKat 🍫</title>
 
 <style>
 body{
@@ -15,6 +17,13 @@ body{
 
 h1{
     margin-top:20px;
+    margin-bottom:10px;
+}
+
+#counter{
+    font-size:22px;
+    margin-bottom:10px;
+    font-weight:bold;
 }
 
 #gameArea{
@@ -25,15 +34,30 @@ h1{
 
 #kitkat{
     position:absolute;
-    font-size:60px;
+    font-size:120px;
     cursor:pointer;
     user-select:none;
-    transition:0.2s;
+    transition:
+        left 0.2s ease,
+        top 0.2s ease,
+        font-size 0.3s ease;
 }
 
-#counter{
-    font-size:22px;
-    margin-top:10px;
+#progressContainer{
+    width:300px;
+    height:22px;
+    border:2px solid #333;
+    margin:10px auto;
+    border-radius:20px;
+    overflow:hidden;
+    background:white;
+}
+
+#progress{
+    width:0%;
+    height:100%;
+    background:#4CAF50;
+    transition:width 0.3s ease;
 }
 
 #message{
@@ -47,6 +71,7 @@ h1{
     border-radius:20px;
     box-shadow:0 0 20px rgba(0,0,0,0.3);
     max-width:500px;
+    z-index:100;
 }
 
 button{
@@ -54,6 +79,13 @@ button{
     border:none;
     border-radius:10px;
     cursor:pointer;
+    font-size:16px;
+}
+
+#hint{
+    font-size:18px;
+    margin-top:10px;
+    color:#444;
 }
 </style>
 </head>
@@ -61,61 +93,76 @@ button{
 <body>
 
 <h1>🍫 Catch the Escaping KitKat 🍫</h1>
-<div id="counter">Attempts: 0</div>
+
+<div id="counter">
+KitKats Caught: 0 / 10
+</div>
+
+<div id="progressContainer">
+    <div id="progress"></div>
+</div>
+
+<div id="hint">
+Catch the KitKat 10 times to unlock the surprise! 😊
+</div>
 
 <div id="gameArea">
+
     <div id="kitkat">🍫</div>
 
     <div id="message">
-        <h2>🎉 You Caught It! 🎉</h2>
+
+        <h2>🎉 You Did It! 🎉</h2>
 
         <p>
-        Dear Zeel,<br><br>
-
-        You chased this KitKat better than solving a tricky math problem. 😊<br><br>
-
-        If I upset you, I'm sorry.<br>
-        .<br><br>
-
-        Also, you've officially earned:
+        Dear Zeel,
         <br><br>
-        🍫 KitKat × 1<br>
+
+        You caught the world's most stubborn KitKat! 🍫😄
+        <br><br>
+
+        If I upset you, I'm sorry.
+        <br>
+        I hope this little game made you smile.
+        <br><br>
+
+        You've officially earned:
+        <br><br>
+
+        🍫 KitKat × 1
+        <br>
         🍫 Milkybar × 1
+        <br><br>
+
+        "In mathematics, every problem has a solution.
+        I hope our friendship does too." 😊
         </p>
 
-        <button onclick="location.reload()">Play Again</button>
+        <button onclick="location.reload()">
+            Play Again
+        </button>
+
     </div>
+
 </div>
+
+<script>
 
 const kitkat = document.getElementById("kitkat");
 const counter = document.getElementById("counter");
 const message = document.getElementById("message");
+const progress = document.getElementById("progress");
 
-let attempts = 0;
-
-const status = document.createElement("div");
-status.style.fontSize = "22px";
-status.style.marginTop = "10px";
-status.style.height = "30px";
-document.body.insertBefore(status, document.getElementById("gameArea"));
-
-function showStatus(text){
-    status.innerHTML = text;
-
-    clearTimeout(status.timer);
-
-    status.timer = setTimeout(() => {
-        status.innerHTML = "";
-    }, 1500);
-}
+let catches = 0;
+let size = 120;
 
 function moveKitKat(){
 
-    let maxX = window.innerWidth - 100;
-    let maxY = window.innerHeight - 150;
+    const maxX = window.innerWidth - 150;
+    const maxY = window.innerHeight - 220;
 
-    let x = Math.random() * maxX;
-    let y = Math.random() * maxY;
+    const x = Math.random() * maxX;
+    const y = Math.random() * maxY + 80;
 
     kitkat.style.left = x + "px";
     kitkat.style.top = y + "px";
@@ -125,7 +172,7 @@ moveKitKat();
 
 document.addEventListener("mousemove",(e)=>{
 
-    if(attempts >= 10) return;
+    if(catches >= 10) return;
 
     const rect = kitkat.getBoundingClientRect();
 
@@ -138,9 +185,10 @@ document.addEventListener("mousemove",(e)=>{
     );
 
     const escapeDistance =
-        attempts < 5 ? 120 :
-        attempts < 8 ? 80 :
-        40;
+        catches < 3 ? 80 :
+        catches < 6 ? 60 :
+        catches < 8 ? 45 :
+        30;
 
     if(distance < escapeDistance){
         moveKitKat();
@@ -150,33 +198,38 @@ document.addEventListener("mousemove",(e)=>{
 
 kitkat.addEventListener("click",()=>{
 
-    attempts++;
+    catches++;
 
-    counter.innerHTML = "Attempts: " + attempts;
+    counter.innerHTML =
+        "KitKats Caught: " + catches + " / 10";
 
-    const funnyMessages = [
-        "🍫 Still escaping!",
-        "😄 Nice try!",
-        "🏃 KitKat zoomed away!",
-        "🧮 Math teacher vs Chocolate!",
-        "🎯 Almost there!"
-    ];
+    progress.style.width = (catches * 10) + "%";
 
-    if(attempts < 10){
+    size -= 10;
 
-        showStatus(
-            funnyMessages[
-                Math.floor(Math.random()*funnyMessages.length)
-            ]
-        );
+    if(size < 30){
+        size = 30;
+    }
+
+    kitkat.style.fontSize = size + "px";
+
+    if(catches < 10){
 
         moveKitKat();
 
     }else{
 
-        kitkat.style.display="none";
-        message.style.display="block";
+        kitkat.style.display = "none";
+        message.style.display = "block";
 
     }
 
 });
+
+window.addEventListener("resize", moveKitKat);
+
+</script>
+
+</body>
+</html>
+```
