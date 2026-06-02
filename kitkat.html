@@ -6,6 +6,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catch the Escaping KitKat 🍫</title>
 
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZRCD3LH5KB"></script>
+
+<script>
+window.dataLayer = window.dataLayer || [];
+
+function gtag(){
+    dataLayer.push(arguments);
+}
+
+gtag('js', new Date());
+
+gtag('config', 'G-ZRCD3LH5KB');
+</script>
+
 <style>
 body{
     margin:0;
@@ -218,6 +233,10 @@ kitkat.addEventListener("click",()=>{
         moveKitKat();
 
     }else{
+
+        gtag('event', 'game_completed', {
+            game_name: 'CatchTheKitKat'
+        });
 
         kitkat.style.display = "none";
         message.style.display = "block";
