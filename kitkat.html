@@ -87,13 +87,27 @@ button{
     </div>
 </div>
 
-<script>
-
 const kitkat = document.getElementById("kitkat");
 const counter = document.getElementById("counter");
 const message = document.getElementById("message");
 
 let attempts = 0;
+
+const status = document.createElement("div");
+status.style.fontSize = "22px";
+status.style.marginTop = "10px";
+status.style.height = "30px";
+document.body.insertBefore(status, document.getElementById("gameArea"));
+
+function showStatus(text){
+    status.innerHTML = text;
+
+    clearTimeout(status.timer);
+
+    status.timer = setTimeout(() => {
+        status.innerHTML = "";
+    }, 1500);
+}
 
 function moveKitKat(){
 
@@ -109,31 +123,53 @@ function moveKitKat(){
 
 moveKitKat();
 
-kitkat.addEventListener("mouseover", () => {
+document.addEventListener("mousemove",(e)=>{
 
-    if(attempts < 10){
+    if(attempts >= 10) return;
+
+    const rect = kitkat.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width/2;
+    const centerY = rect.top + rect.height/2;
+
+    const distance = Math.sqrt(
+        Math.pow(e.clientX-centerX,2) +
+        Math.pow(e.clientY-centerY,2)
+    );
+
+    const escapeDistance =
+        attempts < 5 ? 120 :
+        attempts < 8 ? 80 :
+        40;
+
+    if(distance < escapeDistance){
         moveKitKat();
     }
 
 });
 
-kitkat.addEventListener("click", () => {
+kitkat.addEventListener("click",()=>{
 
     attempts++;
+
     counter.innerHTML = "Attempts: " + attempts;
+
+    const funnyMessages = [
+        "🍫 Still escaping!",
+        "😄 Nice try!",
+        "🏃 KitKat zoomed away!",
+        "🧮 Math teacher vs Chocolate!",
+        "🎯 Almost there!"
+    ];
 
     if(attempts < 10){
 
-        const funnyMessages = [
-            "Too slow 😄",
-            "Almost got me!",
-            "Math teachers need faster reflexes!",
-            "KitKat escaped!",
-            "Try again!",
-            "🍫 Zoom!"
-        ];
+        showStatus(
+            funnyMessages[
+                Math.floor(Math.random()*funnyMessages.length)
+            ]
+        );
 
-        alert(funnyMessages[Math.floor(Math.random()*funnyMessages.length)]);
         moveKitKat();
 
     }else{
@@ -142,9 +178,5 @@ kitkat.addEventListener("click", () => {
         message.style.display="block";
 
     }
+
 });
-
-</script>
-
-</body>
-</html>
