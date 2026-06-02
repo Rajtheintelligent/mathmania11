@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zeel's Chocolate Challenge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #fff8e1;
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #ffcc80;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 100px;
+            text-align: center;
+        }
+
+        #message {
+            display: none;
+            margin-top: 20px;
+            font-size: 20px;
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>🍫 Zeel's Chocolate Challenge 🍫</h1>
+
+    <p><b>Question 1:</b> 12 + 18 = ?</p>
+    <input id="q1">
+
+    <p><b>Question 2:</b> What comes next? 5, 10, 20, 40, ?</p>
+    <input id="q2">
+
+    <p><b>Question 3:</b> 24 chocolates shared among 6 friends = ?</p>
+    <input id="q3">
+
+    <br><br>
+    <button onclick="checkAnswers()">Unlock Chocolate Box</button>
+
+    <div id="message">
+        🎉 Congratulations Zeel! 🎉<br><br>
+        🍫 Milkybar Unlocked<br>
+        🍫 Kit Kat Unlocked<br><br>
+        Dear Zeel,<br>
+        If I made a mistake, I'm sorry.<br>
+        I value our friendship and hope we can talk again.<br>
+        You are awesome! 😊
+    </div>
+</div>
+
+<script>
+function checkAnswers() {
+    let a1 = document.getElementById("q1").value;
+    let a2 = document.getElementById("q2").value;
+    let a3 = document.getElementById("q3").value;
+
+    if(a1 == "30" && a2 == "80" && a3 == "4") {
+        document.getElementById("message").style.display = "block";
+    } else {
+        alert("Oops! One or more answers are incorrect. Try again! 😊");
+    }
+}
+</script>
+
+</body>
+</html>
