@@ -62,10 +62,9 @@ h1{
     margin-top:10px;
     color:#444;
 }
-
 #gameArea{
     width:100vw;
-    height:100vh;
+    height:calc(100vh - 180px);
     position:relative;
 }
 
@@ -206,18 +205,28 @@ function moveKitKat(){
     const areaWidth = gameArea.clientWidth;
     const areaHeight = gameArea.clientHeight;
 
-    const rect = kitkat.getBoundingClientRect();
+    // Use current font size instead of emoji dimensions
+    const currentSize = parseInt(
+        window.getComputedStyle(kitkat).fontSize
+    );
 
-    const kkWidth = rect.width || size;
-    const kkHeight = rect.height || size;
+    const safeMargin = 30;
 
-    const x = Math.random() * (areaWidth - kkWidth - 20);
-    const y = Math.random() * (areaHeight - kkHeight - 20);
+    const maxX =
+        areaWidth - currentSize - safeMargin;
 
-    kitkat.style.left = Math.max(10,x) + "px";
-    kitkat.style.top = Math.max(10,y) + "px";
+    const maxY =
+        areaHeight - currentSize - safeMargin - 150;
+
+    const x =
+        Math.random() * Math.max(50,maxX);
+
+    const y =
+        Math.random() * Math.max(50,maxY);
+
+    kitkat.style.left = x + "px";
+    kitkat.style.top = y + "px";
 }
-
 // Give player 1 second before first escape
 setTimeout(()=>{
     moveKitKat();
